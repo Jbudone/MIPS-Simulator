@@ -1,0 +1,18 @@
+
+#main {
+	width: 90%;
+	border: thin solid #000;
+	margin: auto;
+	border-radius: 8px;
+}
+
+#processor {
+	min-width: 800px;
+	width: 75%;
+}
+
+#assembly {
+	width: 100%;
+	min-height: 200px;
+	border-top: thin solid #000;
+}
