@@ -296,6 +296,26 @@ IMem.prototype.execute = function() {
 };
 
 // #####################################
+// ## DATA MEMORY
+// #####################################
+function DMem(priority) { this.intitialise(priority); }
+DMem.In = {kMemWrite: 0, kAddr: 1, kWriteData: 2};
+DMem.Out = {kReadData: 0};
+DMem.prototype = new Component();
+DMem.prototype.constructor = DMem;
+DMem.prototype.execute = function() {
+	/* Read */
+	var addr = this.inStore[DMem.In.kAddr];
+	this.outStore[0] = MIPS.Memory.dcache.loadWord(addr);
+
+	/* Write if needed */
+	var shouldWrite = this.inStore[DMem.In.kMemWrite].toInt();
+	if (shouldWrite) {
+		MIPS.Memory.dcache.storeWord(addr, this.inStore[DMem.In.kWriteData]);
+	}
+};
+
+// #####################################
 // ## THE REGISTER FILE
 // #####################################
 function Registers(priority) {
