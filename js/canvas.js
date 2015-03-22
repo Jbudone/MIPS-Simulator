@@ -7,7 +7,6 @@ define(function(){
 			settings = _.defaults(_settings || {},
 				{
 					updateTime: 50,
-					editorMode: true,
 
 					background: '#FAFAFA'
 				}),
@@ -54,40 +53,6 @@ define(function(){
 				resetDimensions();
 			});
 			resetDimensions();
-
-			// Moving components (editor functionality)
-			if (settings.editorMode) {
-				var mousePos = null;
-				_el.on('mousedown', function(evt){
-
-					var x = evt.clientX - _el.offset().left,
-						y = evt.clientY - _el.offset().top;
-					for (var uid in components) {
-						var component = components[uid];
-
-						if (x > component.position.x && x < (component.position.x + component.dimensions.width) &&
-							y > component.position.y && y < (component.position.y + component.dimensions.height)) {
-
-							holdingComponent = component;
-							break;
-						}
-					}
-				}).on('mouseup', function(){
-					holdingComponent = null;
-				}).on('mousemove', function(evt){
-					if (holdingComponent) {
-						
-						var x = evt.clientX - _el.offset().left,
-							y = evt.clientY - _el.offset().top;
-
-						holdingComponent.position.x = x;
-						holdingComponent.position.y = y;
-						hasUpdated = true;
-					}
-
-
-				});
-			}
 
 			this.update();
 		};
