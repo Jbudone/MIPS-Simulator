@@ -7,13 +7,32 @@ define(function(){
 			settings = _.defaults(_settings || {},
 				{
 					updateTime: 50,
+					assetsPath: 'assets/',
 
 					background: '#FAFAFA'
 				}),
 			dimensions = {},
 			components = {},
 			holdingComponent = null,
-			hasUpdated = true;
+			hasUpdated = true,
+			assets = {};
+
+		this.addAsset = function(id, file){
+			
+			if (!assets.hasOwnProperty(id)) {
+				assets[id] = {
+					image: null
+				};
+
+				var image = new Image();
+				image.onload = function(){
+					assets[id].image = image;
+					hasUpdated = true;
+				};
+
+				image.src = settings.assetsPath + file;
+			}
+		};
 
 		this.redraw = function(){
 
@@ -25,7 +44,13 @@ define(function(){
 			for (var uid in components) {
 				var component = components[uid];
 
-				ctx.fillRect(component.position.x, component.position.y, component.dimensions.width, component.dimensions.height);
+				if (component.asset) {
+					if (component.asset.image) {
+						ctx.drawImage(component.asset.image, component.position.x, component.position.y, component.dimensions.width, component.dimensions.height);
+					}
+				} else {
+					ctx.fillRect(component.position.x, component.position.y, component.dimensions.width, component.dimensions.height);
+				}
 			}
 		};
 
@@ -58,13 +83,23 @@ define(function(){
 			this.update();
 		};
 
-		this.addComponent = function(component, regionID){
+		this.addComponent = function(component, regionID, _properties){
+
+			var properties = _.defaults(_properties || {},
+					{
+						position: { x: 0, y: 0 },
+						dimensions: { width: 20, height: 20 },
+						asset: { id: 'placeholder', 'file': 'smiley-face.jpg' },
+					});
+
+			this.addAsset(properties.asset.id, properties.asset.file);
 
 			components[component.uid] = {
-				position: { x: 0, y: 0 },
-				dimensions: { width: 20, height: 20 },
+				position: properties.position,
 				details: component,
-				region: regionID
+				region: regionID,
+				dimensions: properties.dimensions,
+				asset: assets[properties.asset.id]
 			};
 			hasUpdated = true;
 		};
