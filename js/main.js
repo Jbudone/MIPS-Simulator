@@ -31,12 +31,41 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	// Startup the canvas
 	var canvas = new Canvas();
 
+
+	// Just some placeholders to test out the canvas
+	var placeholders = {
+		components: [
+			{ uid: 1 }, { uid: 2 }, { uid: 3 }
+		], wires: []
+	};
+	placeholders.wires.push({
+		input:  placeholders.components[0],
+		output: placeholders.components[1],
+		points: [{x:75, y:0}, {x:0, y:20}]
+	});
+	placeholders.wires.push({
+		input:  placeholders.components[1],
+		output: placeholders.components[2],
+		points: [{x:180, y:0}]
+	});
+	placeholders.wires.push({
+		input:  placeholders.components[2],
+		output: placeholders.components[0],
+		points: [{x:-350, y:0}]
+	});
+
+
 	// We can add components to the canvas here, the first argument will be the actual component object and
 	// the 2nd is the stage which it belongs to. The stage may be helpful for highlighting components in an
 	// active stage or something...or maybe not.
-	canvas.addComponent({ uid: 1 }, STAGE_IF, { position: {x:0, y:0} });
-	canvas.addComponent({ uid: 2 }, STAGE_ID, { position: {x:10, y:80} });
-	canvas.addComponent({ uid: 3 }, STAGE_EX, { position: {x:80, y:40} });
+	canvas.addComponent(placeholders.components[0], STAGE_IF, { position: {x:50, y:80} });
+	canvas.addComponent(placeholders.components[1], STAGE_ID, { position: {x:200, y:100}, dimensions: {width:50, height:60} });
+	canvas.addComponent(placeholders.components[2], STAGE_EX, { position: {x:400, y:300} });
+
+	// Wires should be able to add naturally based off the current Wire prototype
+	canvas.addWire(placeholders.wires[0]);
+	canvas.addWire(placeholders.wires[1]);
+	canvas.addWire(placeholders.wires[2]);
 
 
 	// UI startup
