@@ -72,4 +72,7 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	var UI = new UI();
 	UI.initRegisters(Specifications.registers);
 
+	UI.onUserModifiedRegister = function(register, data){
+		console.log("Changed register ("+register+") to: "+data);
+	};
 });

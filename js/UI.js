@@ -23,7 +23,6 @@ define(function(){
 			
 			for (var i=0; i<regList.length; ++i) {
 				var regName = regList[i];
-				registers[regName] = 0;
 
 				var _regValEl = $('<input/>').attr('type', 'text')
 											.addClass('register-value')
@@ -49,12 +48,15 @@ define(function(){
 				}).data('safeval', 0)
 				.data('regName', regName);
 
+				registers[regName] = {
+					_el: _regValEl
+				};
 				_registersEl.append( _regEl );
 			}
 		};
 
 		this.setRegister = function(register, data){
-
+			registers[register]._el.val(data).data('safeval', data);
 		};
 
 		this.setMemory = function(address, data){
