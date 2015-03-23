@@ -51,6 +51,7 @@ define(function(){
 			};
 			$(window).resize(function(){
 				resetDimensions();
+				hasUpdated = true;
 			});
 			resetDimensions();
 
