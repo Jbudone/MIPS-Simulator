@@ -289,13 +289,23 @@ ShiftLeft2_26.prototype.execute = function() {
 };
 
 // #######################################
-// ## Sign extend a 16 bit number to 32 bits
+// ## Extend bit number to 32 bits
 // #######################################
-function SignExtend(priority) { this.initialise(priority); }
-SignExtend.prototype = new Component();
-SignExtend.prototype.constructor = SignExtend;
-SignExtend.prototype.execute = function() {
-	var upper = (this.inStore[0][0] == '1') ? Bits.One64.slice(0, 16) : Bits.Zero64.slice(0, 16);
+function Ext32(priority) { this.initialise(priority); }
+Ext32.prototype = new Component();
+Ext32.prototype.constructor = Ext32;
+Ext32.In = {kInput: 0, kCtrl: 1};
+Ext32.prototype.execute = function() {
+	var ctrl = this.inStore[Ext32.In.kCtrl].toInt();
+	var lower, upper;
+	if (ctrl) { /* Extending shift amount */
+		lower = this.inStore[Ext32.In.kInput].bits(6, 10).s;
+		upper = Bits.Zero64.slice(0, 27);
+	}
+	else { /* Sign extending the immediate value */
+		lower = this.inStore[Ext32.In.kInput].s;
+		upper = (this.inStore[0][0] == '1') ? Bits.One64.slice(0, 16) : Bits.Zero64.slice(0, 16);
+	}
 	this.outStore[0] = Bits.splice(upper, this.inStore[0]);
 };
 
