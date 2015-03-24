@@ -1,14 +1,72 @@
 
+body {
+	background: #FAFAFA;
+}
+
+#title {
+	font-family: 'Vollkorn', serif;
+	font-size: 48px;
+	text-align: center;
+}
+
+#description {
+	font-family: 'Lato', sans-serif;
+	width: 80%;
+	margin: 20px auto 20px auto;
+}
+
 #main {
 	width: 90%;
 	border: thin solid #000;
 	margin: auto;
 	border-radius: 8px;
+	overflow: hidden;
+}
+
+#processor-container {
+	height: 60%;
+	min-height: 400px;
 }
 
 #processor {
 	min-width: 800px;
 	width: 75%;
+	height: 100%;
+}
+
+#registers {
+	width: 25%;
+	float: right;
+	height: 100%;
+	overflow-y: scroll;
+}
+
+.register {
+	background: #E5E5E5;
+	display: flex;
+	height: 20px;
+	margin: 1px 0px 0px 0px;
+	padding: 0px 0px 0px 5px;
+}
+
+.register:nth-child(odd) {
+	background: #F0F0F0;
+}
+
+.register-name {
+	width: 30%;
+}
+
+.register-value-container {
+	width: 70%;
+	height: 20px;
+}
+
+.register-value {
+	height: 100%;
+	background: none;
+	border: none;
+	font-weight: bold;
 }
 
 #assembly {

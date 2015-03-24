@@ -7,26 +7,114 @@ define(function(){
 			settings = _.defaults(_settings || {},
 				{
 					updateTime: 50,
-					editorMode: true,
+					assetsPath: 'assets/',
 
 					background: '#FAFAFA'
 				}),
 			dimensions = {},
 			components = {},
+			wires = [],
 			holdingComponent = null,
-			hasUpdated = true;
+			hasUpdated = true,
+			assets = {};
 
+		/**
+		 *	Add an asset image into the list of assets. If this asset already exists then this function does
+		 *	nothing. A placeholder is created immediate so that components can reference the asset before its
+		 *	ready.
+		 */
+		this.addAsset = function(id, file){
+			
+			if (!assets.hasOwnProperty(id)) {
+				assets[id] = {
+					image: null
+				};
+
+				var image = new Image();
+				image.onload = function(){
+					assets[id].image = image;
+					hasUpdated = true;
+				};
+
+				image.src = settings.assetsPath + file;
+			}
+		};
+
+		/**
+		 * 	Clear and redraw the entire canvas. This function should only be called if something changes..
+		 * 	There is absolutely no reason to call it when nothing has changed
+		 */
 		this.redraw = function(){
 
+			// Clear the canvas
 			ctx.fillStyle = settings.background;
 			ctx.fillRect(0, 0, dimensions.width, dimensions.height);
 
-			// Temporary section for drawing components...at least until we have graphics assets
+			// Draw each wire first (will appear behind components). Wires have a reference to their source
+			// and destination components, and will use their position properties as a start and end point.
+			// The start and end points will align to the center of the asset; however, if the wire is
+			// slightly slanted to go from the previous point to the last, it will attempt to horizontally and
+			// vertically align the wire.
+			for (var i=0; i<wires.length; ++i) {
+				var wire = wires[i],
+					prevPoint  = {x: wire.source.position.x, y: wire.source.position.y},
+					lastPoint  = {x: wire.destination.position.x, y: wire.destination.position.y};
+
+				// Center the first and last points to the center of the component
+				prevPoint.x += wire.source.dimensions.width / 2;
+				prevPoint.y += wire.source.dimensions.height / 2;
+				lastPoint.x += wire.destination.dimensions.width / 2;
+				lastPoint.y += wire.destination.dimensions.height / 2;
+
+				// Points are relative from the last point. So we draw the path and continuously add to the
+				// previous point
+				ctx.beginPath();
+				ctx.moveTo(prevPoint.x, prevPoint.y);
+				for (var p=0; p<wire.points.length; ++p) {
+					var nextPoint = wire.points[p];
+
+					ctx.lineTo(prevPoint.x + nextPoint.x, prevPoint.y + nextPoint.y);
+
+					prevPoint.x += nextPoint.x;
+					prevPoint.y += nextPoint.y;
+				}
+
+				// Fix the last point to attempt to make it align with the horizontal or vertical ruler. If
+				// the last point can be shifted to align horizontally and/or vertically such that it will
+				// stay lay underneath the component, then do that.
+				var offByX = lastPoint.x - prevPoint.x,
+					offByY = lastPoint.y - prevPoint.y;
+				
+				if (offByX != 0) {
+					if (prevPoint.x >= wire.destination.position.x &&
+						prevPoint.x <= wire.destination.position.x + wire.destination.dimensions.width) {
+							lastPoint.x = prevPoint.x;
+						}
+				}
+
+				if (offByY != 0) {
+					if (prevPoint.y >= wire.destination.position.y &&
+						prevPoint.y <= wire.destination.position.y + wire.destination.dimensions.height) {
+							lastPoint.y = prevPoint.y;
+						}
+				}
+
+				ctx.lineTo(lastPoint.x, lastPoint.y);
+				ctx.stroke();
+			}
+
+			// Draw each component
 			ctx.fillStyle = '#333333';
 			for (var uid in components) {
 				var component = components[uid];
 
-				ctx.fillRect(component.position.x, component.position.y, component.dimensions.width, component.dimensions.height);
+				if (component.asset) {
+					if (component.asset.image) {
+						ctx.drawImage(component.asset.image, component.position.x, component.position.y, component.dimensions.width, component.dimensions.height);
+					}
+				} else {
+					ctx.fillRect(component.position.x, component.position.y, component.dimensions.width, component.dimensions.height);
+				}
 			}
 		};
 
@@ -52,54 +140,41 @@ define(function(){
 			};
 			$(window).resize(function(){
 				resetDimensions();
+				hasUpdated = true;
 			});
 			resetDimensions();
-
-			// Moving components (editor functionality)
-			if (settings.editorMode) {
-				var mousePos = null;
-				_el.on('mousedown', function(evt){
-
-					var x = evt.clientX - _el.offset().left,
-						y = evt.clientY - _el.offset().top;
-					for (var uid in components) {
-						var component = components[uid];
-
-						if (x > component.position.x && x < (component.position.x + component.dimensions.width) &&
-							y > component.position.y && y < (component.position.y + component.dimensions.height)) {
-
-							holdingComponent = component;
-							break;
-						}
-					}
-				}).on('mouseup', function(){
-					holdingComponent = null;
-				}).on('mousemove', function(evt){
-					if (holdingComponent) {
-						
-						var x = evt.clientX - _el.offset().left,
-							y = evt.clientY - _el.offset().top;
-
-						holdingComponent.position.x = x;
-						holdingComponent.position.y = y;
-						hasUpdated = true;
-					}
-
-
-				});
-			}
 
 			this.update();
 		};
 
-		this.addComponent = function(component, regionID){
+		this.addComponent = function(component, regionID, _properties){
+
+			var properties = _.defaults(_properties || {},
+					{
+						position: { x: 0, y: 0 },
+						dimensions: { width: 20, height: 20 },
+						asset: { id: 'placeholder', 'file': 'smiley-face.jpg' },
+					});
+
+			this.addAsset(properties.asset.id, properties.asset.file);
 
 			components[component.uid] = {
-				position: { x: 0, y: 0 },
-				dimensions: { width: 20, height: 20 },
+				position: properties.position,
 				details: component,
-				region: regionID
+				region: regionID,
+				dimensions: properties.dimensions,
+				asset: assets[properties.asset.id]
 			};
+			hasUpdated = true;
+		};
+
+		this.addWire = function(wire){
+
+			wires.push({
+				source: components[wire.input.uid],
+				destination: components[wire.output.uid],
+				points: wire.points
+			});
 			hasUpdated = true;
 		};
 
