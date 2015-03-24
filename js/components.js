@@ -339,19 +339,27 @@ IMem.prototype.execute = function() {
 // ## DATA MEMORY
 // #####################################
 function DMem(priority) { this.intitialise(priority); }
-DMem.In = {kMemWrite: 0, kAddr: 1, kWriteData: 2};
+DMem.In = {kMemWrite: 0, kMemCtrl: 1, kAddr: 2, kWriteData: 3};
 DMem.Out = {kReadData: 0};
 DMem.prototype = new Component();
 DMem.prototype.constructor = DMem;
 DMem.prototype.execute = function() {
 	/* Read */
+	var writeCtrl = this.inStore[DMem.In.kMemCtrl];
+	var w_size = writeCtrl.s.slice(1);
 	var addr = this.inStore[DMem.In.kAddr];
-	this.outStore[0] = MIPS.Memory.dcache.loadWord(addr);
+	var bytes = 4;
+	if (w_size == '01') { bytes = 1; }
+	else if (writeCtrl == '10') { bytes = 2; }
+	this.outStore[0] = MIPS.Memory.dcache.load(addr, bytes);
+	if (writeCtrl.s[0] == '1') { /* Load upper */
+		this.outStore[0] = this.outStore[0].shiftLeft((4 - bytes) * 8);
+	}
 
 	/* Write if needed */
-	var shouldWrite = this.inStore[DMem.In.kMemWrite].toInt();
-	if (shouldWrite) {
-		MIPS.Memory.dcache.storeWord(addr, this.inStore[DMem.In.kWriteData]);
+	var write = this.inStore[DMem.In.kMemWrite];
+	if (write.notZero()) {
+		MIPS.Memory.dcache.storeWord(addr, this.inStore[DMem.In.kWriteData], bytes);
 	}
 };
 
@@ -362,28 +370,38 @@ function Reg(priority) {
 	this.initialise(priority);
 	this.registers = [];
 	for (var i = 0; i < 32; ++i) {
-		this.registers[i] = Bits.kZero64;
+		this.registers[i] = Bits.kZero64.slice(0, 32);
 	}
-	this.HI = Bits.kZero64;
-	this.LO = Bits.kZero64;
+	this.HI = Bits.kZero64.slice(0, 32);
+	this.LO = Bits.kZero64.slice(0, 32);
 }
-Reg.In = {kRegWrite: 0, kReadReg1: 1, kReadReg2: 2,
+Reg.In = {kRegWrite: 0, kReadReg0: 1, kReadReg1: 2,
 			 kWriteReg: 3, kWriteData: 4};
-Reg.Out = {kReadData1: 0, kReadData2: 1};
+Reg.Out = {kReg0: 0, kReg1: 1, kHi: 2, kLo: 3};
 Reg.prototype = new Component();
 Reg.prototype.constructor = Reg;
 Reg.prototype.execute = function() {
 	/* Read from the registers */
-	var r1 = this.inStore[Reg.In.kReadReg1].toInt();
-	var r2 = this.inStore[Reg.In.kReadReg2].toInt();
-	this.outStore[Reg.Out.kReadData1] = new Bits(this.registers[r1]);
-	this.outStore[Reg.Out.kReadData2] = new Bits(this.registers[r2]);
+	var r1 = this.inStore[Reg.In.kReadReg0].toInt();
+	var r2 = this.inStore[Reg.In.kReadReg1].toInt();
+	this.outStore[Reg.Out.kReg0] = new Bits(this.registers[r1]);
+	this.outStore[Reg.Out.kReg1] = new Bits(this.registers[r2]);
+	this.outStore[Reg.Out.kHi] = new Bits(this.HI);
+	this.outStore[Reg.Out.kLo] = new Bits(this.LO);
 
 	/* Write to the write register if need to */
-	var shouldWrite = this.inStore[Reg.In.kRegWrite].toInt();
-	if (shouldWrite) {
-		var wr = this.inStore[Reg.In.kWriteReg].toInt();
-		this.registers[wr] = this.inStore[Reg.In.kWriteData];
+	var regWrite = this.inStore[Reg.In.kRegWrite];
+	if (regWrite.notZero()) {
+		var data = this.inStore[Reg.In.kWriteData];
+		if (regWrite.s == '10') {
+			/* Write to the hi and low registers */
+			this.HI = data.bits(32, 63).s;
+			this.LO = data.s.slice(0, 31).s;
+		}
+		else {
+			var wr = this.inStore[Reg.In.kWriteReg].toInt();
+			this.registers[wr] = data.bits(0, 31).s;
+		}
 	}
 };
 

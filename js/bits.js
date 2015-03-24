@@ -23,6 +23,26 @@ Bits.prototype = {
 	},
 
 	/**
+	 * Return true if all bits are zero.
+	 */
+	isZero: function() {
+		for (var i = 0; i < this.s.length; ++i) {
+			if (this.s[i] == '1') { return false; }
+		}
+		return true;
+	},
+
+	/**
+	 * Return true if at least one bit is not zero.
+	 */
+	notZero: function() {
+		for (var i = 0; i < this.s.length; ++i) {
+			if (this.s[i] == '1') { return true; }
+		}
+		return false;
+	},
+
+	/**
 	 * Create a new Bits object with the value of this one shifted left by 'bits'.
 	 */
 	shiftLeft: function(bits) {
