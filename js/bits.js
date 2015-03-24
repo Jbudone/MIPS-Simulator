@@ -6,8 +6,8 @@ function Bits(str, type) {
 	this.type = type || Bits.kUnsigned;
 }
 
-Bits.kZero32 = "00000000000000000000000000000000";
-Bits.kOne32 = "11111111111111111111111111111111";
+Bits.kZero64 = "0000000000000000000000000000000000000000000000000000000000000000";
+Bits.kOne64 = "1111111111111111111111111111111111111111111111111111111111111111";
 Bits.kUnsigned = 0;
 Bits.kSigned = 1;
 
@@ -26,7 +26,30 @@ Bits.prototype = {
 	 * Create a new Bits object with the value of this one shifted left by 'bits'.
 	 */
 	shiftLeft: function(bits) {
-		return new Bits(this.s.splice(2) + "00", this.type);
+		return new Bits(this.s.splice(bits) + Bits.kZero64.slice(0, bits),
+							 this.type);
+	},
+
+	/**
+	 * Create a new Bits object with the value of this one shifted right by 'bits' (does an arithmetic shift).
+	 */
+	shiftRightArithmetic: function(bits) {
+		var sign = this.s[0];
+		var str = this.s.splice(0, this.s.length - bits);
+		if (sign == '0') {
+			return new Bits(Bits.kZero64.slice(0, bits) + str, this.type);
+		}
+		else {
+			return new Bits(Bits.kOne64.slice(0, bits) + str, this.type);
+		}
+	},
+
+	/**
+	 * Create a new Bits object with the value of this one shifted right by 'bits'.
+	 */
+	shiftRight: function(bits) {
+		var str = this.s.splice(0, this.s.length - bits);
+		return new Bits(Bits.kZero64.slice(0, bits) + str, this.type);
 	},
 	
 	/**
@@ -37,7 +60,7 @@ Bits.prototype = {
 			return parseInt(this.s, 2);
 		}
 		else { /* Signed int */
-			var signed = bits[0] + Bits.Zero32.slice(0, bits.length-1);
+			var signed = bits[0] + Bits.Zero64.slice(0, bits.length-1);
 			return (-parseInt(signed, 2)) + parseInt(bits.slice(1), 2);
 		}
 	}
@@ -60,7 +83,7 @@ Bits.signed = function(val, bits) {
 	var i_val = (val < 0) ? val + Math.pow(2, bits-1) : val;
 	var lower = i_val.toString(2);
 	var upper_bits = bits - lower.length;
-	var upper = (val < 0) ? Bits.One32.slice(0, upper_bits) : Bits.Zero32.slice(0, upper_bits); 
+	var upper = (val < 0) ? Bits.One64.slice(0, upper_bits) : Bits.Zero64.slice(0, upper_bits); 
 	return new Bits(upper + lower, Bits.kSigned);
 };
 
@@ -101,5 +124,5 @@ Bits.str = function(val) {
  */
 Bits.unsigned = function(val, bits) {
 	var lower = val.toString(2);
-	return new Bits(Bits.Zero32.slice(0, bits-lower.length) + lower, Bits.kUnsigned);
+	return new Bits(Bits.Zero64.slice(0, bits-lower.length) + lower, Bits.kUnsigned);
 };

@@ -185,32 +185,62 @@ Mux.prototype.execute = function() {
 // ## THE MAIN ALU
 // #######################################
 function ALU(priority) { this.intialise(priority); }
-ALU.fn = {
-	"0010": function(a,b) { return a+b; },
-	"0110": function(a,b) { return a-b; },
-	"0000": function(a,b) { return a & b; },
-	"0001": function(a,b) { return a | b; },
-	"1100": function(a,b) { return !(a | b); },
-	"0111": function(a,b) { return (a < b) ? 1 : 0; }
-};
+
 
 ALU.prototype = new Component();
 ALU.In = {kIn0: 0, kIn1: 1, kALUCtrl: 2};
 ALU.Out = {kZero: 0, kResult: 1};
+ALU.Op = {
+	kAdd:  '00000', kAddu:  '00001', kSub: '00010', kSubu: '00011',
+	kOr:   '00101', kNor:   '00111', kXor: '00110', kAnd:  '00100',
+	kMult: '01000', kMultu: '01001', kDiv: '01010', kDivu: '01011',
+	kSlt:  '01101',
+	kSll:  '01100', kSrl:   '01110', kSra: '01111'
+};
+ALU.fn = {};
+/* The inputs for these functions are numbers */
+ALU.fn[ALU.Op.kAdd] = ALU.fn[ALU.Op.kAddu] = function(a,b) { return a + b; };
+ALU.fn[ALU.Op.kSub] = ALU.fn[ALU.Op.kSubu] = function(a,b) { return a - b; };
+ALU.fn[ALU.Op.kOr] = function(a,b) { return a | b; };
+ALU.fn[ALU.Op.kNor] = function(a,b) { return ~(a | b); };
+ALU.fn[ALU.Op.kXor] = function(a,b) { return  a ^ b; };
+ALU.fn[ALU.Op.kAnd] = function(a,b) { return a & b; };
+ALU.fn[ALU.Op.kMult] = ALU.fn[ALU.Op.kMultu] = function(a,b) { return a * b; };
+ALU.fn[ALU.Op.kDiv] = ALU.fn[ALU.Op.kDivu] = function(a,b) { return a / b; };
+ALU.fn[ALU.Op.kSlt] = function(a,b) { return (a < b) ? 1 : 0; };
+
+/* 'a' is a Bits object, 'b' is a number */
+ALU.fn[ALU.Op.kSll] = function(a,b) { return a.shiftLeft(b); };
+ALU.fn[ALU.Op.kSrl] = function(a,b) { return a.shiftRight(b); };
+ALU.fn[ALU.Op.kSra] = function(a,b) { return a.shiftRightArithmetic(b); };
+
+ALU.Src0 = { kRs: '00', kR0: '01', kLo: '10', kHi: '11' };
+ALU.Src1 = { kRt: '00', kR0: '01', kImmediate: '10', kPCPlus4: '11' }; 
+
 ALU.prototype.constructor = ALU;
 ALU.prototype.execute = function() {
+	var ctrl = this.inStore[ALU.In.kALUCtrl].s;
+	var neg = parseInt(ctrl[0], 2);
+	ctrl = '0' + ctrl.splice(1);
+	
+	this.inStore[ALU.In.kIn0].type = Bits.kSigned;
+	this.inStore[ALU.In.kIn1].type = Bits.kSigned;
+	if ((ctrl != ALU.Op.kSlt && ctrl[1] == '1' && (ctrl[4] == '1' || ctrl[2] == '1')) ||
+		 (ctrl.splice(0, 3) == '001')) {
+		this.inStore[ALU.In.kIn0].type = Bits.kUnsigned;
+		this.inStore[ALU.In.kIn1].type = Bits.kUnsigned;
+	}
+	
 	var in0 = this.inStore[ALU.In.kIn0].toInt();
 	var in1 = this.inStore[ALU.In.kIn1].toInt();
-	var result = ALU.fn[this.inStore[ALU.In.kALUCtrl].s](in0, in1);
+	
+	if (ctrl != ALU.Op.kSlt && ctrl.splice(0,3) == '011') { /* shifts */
+		in0 = this.inStore[ALU.In.kIn0];
+	}
+	var result = ALU.fn[ctrl](in0, in1);
 
-	this.outStore[ALU.Out.kZero] = Bits.bit(result == 0);
-	if (this.inStore[ALU.In.kIn0].type == Bits.kUnsigned &&
-		 this.inStore[ALU.In.kIn1].type == Bits.kUnsigned) {
-		this.outStore[ALU.Out.kResult] = Bits.unsigned(result, 32);
-	}
-	else { /* At least one input is signed */
-		this.outStore[ALU.Out.kResult] = Bits.signed(result, 32);
-	}
+	this.outStore[ALU.Out.kZero] = Bits.bit(result == neg);
+	this.outStore[ALU.Out.kResult] = Bits.signed(result, 64);
 };
 
 // #######################################
@@ -255,7 +285,7 @@ function ShiftLeft2_26(priority) { this.initialise(priority); }
 ShiftLeft2_26.prototype = new Component();
 ShiftLeft2_26.prototype.constructor = ShiftLeft2_26;
 ShiftLeft2_26.prototype.execute = function() {
-	this.outStore[0] = Bits.splice(this.inStore[0], "00");
+	this.outStore[0] = Bits.splice(this.inStore[0], '00');
 };
 
 // #######################################
@@ -265,7 +295,7 @@ function SignExtend(priority) { this.initialise(priority); }
 SignExtend.prototype = new Component();
 SignExtend.prototype.constructor = SignExtend;
 SignExtend.prototype.execute = function() {
-	var upper = (this.inStore[0][0] == '1') ? Bits.One32.slice(0, 16) : Bits.Zero32.slice(0, 16);
+	var upper = (this.inStore[0][0] == '1') ? Bits.One64.slice(0, 16) : Bits.Zero64.slice(0, 16);
 	this.outStore[0] = Bits.splice(upper, this.inStore[0]);
 };
 
@@ -318,32 +348,32 @@ DMem.prototype.execute = function() {
 // #####################################
 // ## THE REGISTER FILE
 // #####################################
-function Registers(priority) {
+function Reg(priority) {
 	this.initialise(priority);
 	this.registers = [];
 	for (var i = 0; i < 32; ++i) {
-		this.registers[i] = Bits.kZero32;
+		this.registers[i] = Bits.kZero64;
 	}
-	this.HI = Bits.kZero32;
-	this.LO = Bits.kZero32;
+	this.HI = Bits.kZero64;
+	this.LO = Bits.kZero64;
 }
-Registers.In = {kRegWrite: 0, kReadReg1: 1, kReadReg2: 2,
-					 kWriteReg: 3, kWriteData: 4};
-Registers.Out = {kReadData1: 0, kReadData2: 1};
-Registers.prototype = new Component();
-Registers.prototype.constructor = Registers;
-Registers.prototype.execute = function() {
+Reg.In = {kRegWrite: 0, kReadReg1: 1, kReadReg2: 2,
+			 kWriteReg: 3, kWriteData: 4};
+Reg.Out = {kReadData1: 0, kReadData2: 1};
+Reg.prototype = new Component();
+Reg.prototype.constructor = Reg;
+Reg.prototype.execute = function() {
 	/* Read from the registers */
-	var r1 = this.inStore[Registers.In.kReadReg1].toInt();
-	var r2 = this.inStore[Registers.In.kReadReg2].toInt();
-	this.outStore[Registers.Out.kReadData1] = new Bits(this.registers[r1]);
-	this.outStore[Registers.Out.kReadData2] = new Bits(this.registers[r2]);
+	var r1 = this.inStore[Reg.In.kReadReg1].toInt();
+	var r2 = this.inStore[Reg.In.kReadReg2].toInt();
+	this.outStore[Reg.Out.kReadData1] = new Bits(this.registers[r1]);
+	this.outStore[Reg.Out.kReadData2] = new Bits(this.registers[r2]);
 
 	/* Write to the write register if need to */
-	var shouldWrite = this.inStore[Registers.In.kRegWrite].toInt();
+	var shouldWrite = this.inStore[Reg.In.kRegWrite].toInt();
 	if (shouldWrite) {
-		var wr = this.inStore[Registers.In.kWriteReg].toInt();
-		this.registers[wr] = this.inStore[Registers.In.kWriteData];
+		var wr = this.inStore[Reg.In.kWriteReg].toInt();
+		this.registers[wr] = this.inStore[Reg.In.kWriteData];
 	}
 };
 
@@ -356,16 +386,126 @@ function Ctrl(priority) {
 Ctrl.kRegWrite = 0;
 Ctrl.kMemToReg = 1;
 Ctrl.kMemWrite = 2;
-Ctrl.kALUOp = 3;
-Ctrl.kALUSrc0 = 4;
-Ctrl.kALUSrc1 = 5;
-Ctrl.kRegDest = 6;
-Ctrl.kBranch = 7;
+Ctrl.kMemCtrl = 3;
+Ctrl.kALUCtrl = 4;
+Ctrl.kALUSrc0 = 5;
+Ctrl.kALUSrc1 = 6;
+Ctrl.kRegDest = 7;
+Ctrl.kBranch = 8;
+Ctrl.kJump = 9;
+Ctrl.kJumpR = 10;
+Ctrl.kExtendCtrl = 11;
 
 Ctrl.prototype = new Component();
 Ctrl.prototype.constructor = Ctrl;
+Ctrl.prototype.resetSignals = function() {
+	this.outStore[Ctrl.kRegWrite].s = '00';
+	this.outStore[Ctrl.kMemToReg].s = '0';
+	this.outStore[Ctrl.kMemWrite].s = '0';
+	this.outStore[Ctrl.kMemCtrl].s = '000';
+	this.outStore[Ctrl.kALUCtrl].s = '00000';
+	this.outStore[Ctrl.kALUSrc0].s = '00';
+	this.outStore[Ctrl.kALUSrc1].s = '00';
+	this.outStore[Ctrl.kRegDest].s = '00';
+	this.outStore[Ctrl.kBranch].s = '0';
+	this.outStore[Ctrl.kJump].s = '0';
+	this.outStore[Ctrl.kJumpR].s = '0';
+	this.outStore[Ctrl.kExtendCtrl].s = '0';
+};
+Ctrl.prototype.processRType = function(funct) {
+	this.outStore[Ctrl.kRegWrite].s = '01';
+	this.outStore[Ctrl.kRegDest].s = '01';
+	if (funct == '001000') { /* Jump register */
+		this.outStore[Ctrl.kRegWrite].s = '00';
+		this.outStore[Ctrl.kJumpR].s = '1';
+		this.outStore[Ctrl.kALUSrc1].s = ALU.Src1.kR0;
+	}
+	else if (funct == '101010') { /* Set on less than */
+		this.outStore[Ctrl.kALUCtrl].s = ALU.Op.kSlt;
+	}
+	else if (funct[0] == '1') { /* add, sub, logic */
+		this.outStore[Ctrl.kALUCtrl].s = funct.splice(1);
+	}
+	else if (funct[1] == '1') { /* Mult, div or move from hi/low */
+		if (funct[2] == '1') { /* Mult or Div */
+			this.outStore[Ctrl.kRegWrite].s = '10';
+			this.outStore[Ctrl.kRegDest].s = '11';
+			this.outStore[Ctrl.kALUCtrl].s = '0' + funct.splice(2);
+		}
+		else { /* Move from hi or low */
+			this.outStore[Ctrl.kALUSrc1].s = ALU.Src1.kR0;
+			if (funct[4] == '0') { /* move from hi */
+				this.outStore[Ctrl.kALUSrc0].s = ALU.Src0.kHi;
+			}
+			else { /* Move from low */
+				this.outStore[Ctrl.kALUSrc0].s = ALU.Src0.kLo;
+			}
+		}
+	}
+	else { /* Shifts */
+		this.outStore[Ctrl.kALUCtrl].s = '011' + funct.splice(3);
+		if (funct[3] == '0') { /* immediate (use shift amt) */
+			this.outStore[Ctrl.kExtendCtrl].s = '1';
+		}
+	}
+	
+};
 Ctrl.prototype.execute = function() {
+	this.resetSignals();
+	var opcode = this.inStore[0].s;
 
+	if (opcode[0] == '1') { /* load or store */
+		if (opcode[5] == '0') { /* byte */
+			this.outStore[Ctrl.kMemCtrl].s = '001';
+		}
+		else { /* Half or word */
+			this.outStore[Ctrl.kMemCtrl].s = '01' + opcode[4];
+		}
+		this.outStore[Ctrl.kALUSrc1].s = ALU.Src1.kImmediate;
+		this.outStore[Ctrl.kMemWrite].s = opcode[2];
+		if (opcode[2] == '0') { /* load */
+			this.outStore[Ctrl.kMemCtrl].s[0] = opcode[3];
+			this.outStore[Ctrl.kMemToReg].s = '1';
+			this.outStore[Ctrl.kRegWrite].s = '01';
+		}
+	}
+	else if (opcode[2] == '1') { /* Immediate */
+		this.outStore[Ctrl.kRegWrite].s = '01';
+		this.outStore[Ctrl.kALUSrc1].s = ALU.Src1.kImmediate;
+		if (opcode == '001111') { /* Load upper immediate */
+			this.outStore[Ctrl.kALUSrc0].s = ALU.Src0.kR0;
+		}
+		else if (opcode[3] == '1') { /* andi, ori */
+			if (opcode[5] == '0') { /* ori */
+				this.outStore[Ctrl.kALUCtrl].s = ALU.Op.kOr;
+			}
+			else { /* andi */
+				this.outStore[Ctrl.kALUCtrl].s = ALU.Op.kAnd;
+			}
+		}
+		else if (opcode[4] == '1') { /* set-on-less-than immediate */
+			this.outStore[Ctrl.kALUOp].s = ALU.Op.kSlt;
+		}
+		else if (opcode[5] == '0') { /* addi */
+			this.outStore[Ctrl.kALUOp].s = ALU.Op.kAddu;
+		}
+	}
+	else if (opcode[3] == '1') { /* Branch */
+		this.outStore[Ctrl.kBranch].s = '1';
+		this.outStore[Ctrl.kALUCtrl].s = opcode[5] + ALU.Op.kSub.slice(1);
+	}
+	else if (opcode[4] == '1') { /* Jump */
+		this.outStore[Ctrl.kJump] = '1';
+		if  (opcode[5] == '1') { /* Jump and link */
+			this.outStore[Ctrl.kWriteReg].s = '01';
+			this.outStore[Ctrl.kRegDest].s = '10';
+			this.outStore[Ctrl.kALUSrc0].s = ALU.Src0.kR0;
+			this.outStore[Ctrl.kALUSrc1].s = ALU.Src1.kPCPlus4;
+		}
+	}
+	else { /* R type */
+		this.processRType(this.inStore[1].s);
+	}
 };
 
 // #######################################
