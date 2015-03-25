@@ -75,4 +75,12 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	UI.onUserModifiedRegister = function(register, data){
 		console.log("Changed register ("+register+") to: "+data);
 	};
+
+	UI.onUserAddedBreakpoint = function(lineno){
+		console.log("User set a breakpoint at ["+lineno+"]");
+	};
+
+	UI.onUserClearedBreakpoint = function(lineno){
+		console.log("User cleared the breakpoint at ["+lineno+"]");
+	};
 });

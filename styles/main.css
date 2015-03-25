@@ -69,8 +69,13 @@ body {
 	font-weight: bold;
 }
 
-#assembly {
+#editor {
 	width: 100%;
 	min-height: 200px;
 	border-top: thin solid #000;
+}
+
+.breakpoint {
+	background: #007BBA;
+	color: #FFF;
 }

@@ -24,6 +24,7 @@
 	<script src="js/libs/underscore-min.js"></script>
 	<script src="js/libs/bootstrap.min.js"></script>
 	<script src="js/libs/modernizr.js"></script>
+	<script src="js/libs/ace/ace.js"></script>
 	<script src="js/libs/require.js"></script>
 	<script>
 		requirejs.config({
@@ -71,9 +72,161 @@
 
 			</div>
 		</div>
-		<div id="assembly">
+		<pre id="editor">
 
-		</div>
+####################################################################
+#
+# Bubble sort example CSC 350
+#
+# The bubble sort implementation is from the Chapter 2
+# lecture slides.
+#
+####################################################################
+
+	   .data
+array:     .word        1,6,4,2,5,7,3,4,2
+n:	   .word    	9
+title1:	   .asciiz	"The unsorted numbers: "  # strings are null terminated
+title2:    .asciiz  	"The sorted numbers:   "
+space:     .asciiz	" "
+eol:	   .asciiz  	"\n"
+
+	   .text
+	   la		$s6, array	 	# put addr of array in $s6
+	   la		$s0, n		 	# put value of n in $s0 
+	   lw		$s0, 0($s0)		
+
+   	   la		$a0, title1	 	# display title1
+	   li		$v0, 4
+	   syscall
+	   move		$t5, $s6		# t5 is addr of value to display
+	   move		$t1, $s0		# t1 counts down from n to 0
+prt1:  	   lw		$a0, 0($t5) 		# display one number
+	   li		$v0, 1
+	   syscall
+	   la		$a0, space		# display a space
+	   li		$v0, 4
+	   syscall	
+	   addi		$t5, $t5, 4	  	# increment address
+	   addi		$t1, $t1, -1	  	# decrement counter
+	   bne		$t1, $zero, prt1 	# repeat loop if counter not zero
+	   la		$a0, eol		# display end of line
+	   li		$v0, 4
+	   syscall
+	   la		$a0, array		# invoke sort routine
+	   move		$a1, $s0
+	   jal		sort
+
+
+           la		 $a0, title2 	 	# display title2
+	   li		 $v0, 4
+	   syscall
+	   move		 $t5, $s6		# t5 is addr of value to display
+	   move		 $t1, $s0		# t1 will count down from n to 0
+prt2:      lw		 $a0, 0($t5)            # display one number
+	   li		 $v0, 1
+	   syscall
+	   la		 $a0, space		# display a space
+	   li		 $v0, 4
+	   syscall	
+	   addi		 $t5, $t5, 4	 	# increment address
+	   addi		 $t1, $t1, -1	  	# decrement counter
+	   bne		 $t1, $zero, prt2 	# repeat loop if counter not zero
+	   la		 $a0, eol         	# display end of line
+	   li		 $v0, 4
+	   syscall
+
+           li   	 $v0, 10          	# system call for exit
+	   syscall
+
+####################################################################
+
+
+# Selection Sort
+#	$a0: address of array
+#	$a1: size of array
+sort:	addi	$sp, $sp, -48		# make room for 1 register
+		sw		$ra, 44($sp)		# save return address on stack
+		sw		$t9, 40($sp)
+		sw		$t8, 36($sp)
+		sw		$t4, 32($sp)
+		sw		$t3, 28($sp)
+		sw		$t2, 24($sp)
+		sw		$t1, 20($sp)
+		sw		$t0, 16($sp)
+		sw		$s3, 12($sp)
+		sw		$s2, 8($sp)
+		sw		$s1, 4($sp)
+		sw		$s0, 0($sp)
+
+		move	$t8, $a0			# address of array
+		move	$t9, $a1			# size of array
+
+# for i=0...n-1
+		move	$s0, $zero			# i = 0
+itest:	slt		$s1, $s0, $t9		# $s1 = (i < n)
+		beq		$s1, $zero, sorted
+
+#	set min & min index to A[i]
+		sll		$t0, $s0, 2
+		add		$t0, $t8, $t0		# $t0 = &A + i
+		lw		$t1, 0($t0)			# $t1 = A[i]	-- min = A[i]
+		move	$t2, $s0			# $t2 = i		-- minIndex = i
+
+# 	for j=i...n
+		move	$s1, $s0			# j = i
+		addi	$s1, $s1, 1			# j = i+1
+jtest:	slt		$s2, $s1, $t9		# $s2 = (j < n)
+		beq		$s2, $zero, jdone
+
+#		A[j] < A[i] ?
+		sll		$t0, $s1, 2
+		add		$t0, $t8, $t0		# $t0 = &A + j
+		lw		$t3, 0($t0)			# $t3 = A[j]
+		slt		$s2, $t3, $t1		# $s2 = A[j] < A[i]
+		beq		$s2, $zero, jnext
+
+#			set new min & min index to A[j]
+		move	$t1, $t3
+		move	$t2, $s1
+
+jnext:	addi	$s1, $s1, 1
+		j		jtest
+jdone:	
+#	endfor j
+		
+#	swap
+		beq		$t2, $s0, idone		# if minIndex != i
+		sll		$t0, $s0, 2
+		add		$t0, $t8, $t0		# $t0 = &A + i
+		lw		$t4, 0($t0)			# $t4 = A[i]
+		sw		$t1, 0($t0)			# A[i] = A[j]
+		sll		$t0, $t2, 2
+		add		$t0, $t8, $t0		# $t0 = &A + j
+		sw		$t4, 0($t0)			# A[j] = $t4 (tmp)
+
+idone:	addi	$s0, $s0, 1			# ++i
+		j		itest
+# endfor i
+
+sorted:	lw		$s0, 0($sp)
+		lw		$s1, 4($sp)
+		lw		$s2, 8($sp)
+		lw		$s3, 12($sp)
+		lw		$t0, 16($sp)
+		lw		$t1, 20($sp)
+		lw		$t2, 24($sp)
+		lw		$t3, 28($sp)
+		lw		$t4, 32($sp)
+		lw		$t8, 36($sp)
+		lw		$t9, 40($sp)
+		lw		$ra, 44($sp)		# restore return address
+		addi	$sp, $sp, 48		# restore stack pointer
+		jr		$ra					# return to caller
+
+
+####################################################################
+		</pre>
 		<div id="data">
 
 		</div>

@@ -8,7 +8,33 @@ define(function(){
 			_registersEl = $('#registers'),
 			_assemblyEl = $('#assembly'),
 			registers = {},
+			breakpoints = {},
 			UI = this;
+
+		
+		// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% //
+		// 			Assembly Editor
+		// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% //
+
+		// Hook functionality
+		this.onUserAddedBreakpoint = new Function();
+		this.onUserClearedBreakpoint = new Function();
+
+		var editor = ace.edit('editor');
+		editor.setTheme('ace/theme/chrome');
+		editor.getSession().setMode('ace/mode/mips_assembler');
+
+		editor.on('breakpoint', function(e){
+			if (breakpoints.hasOwnProperty(e.lineno)) {
+				delete breakpoints[e.lineno];
+				e.session.clearBreakpoint(e.lineno, 'breakpoint');
+				UI.onUserClearedBreakpoint(e.lineno);
+			} else {
+				breakpoints[e.lineno] = e;
+				e.session.setBreakpoint(e.lineno, 'breakpoint');
+				UI.onUserAddedBreakpoint(e.lineno);
+			}
+		});
 
 		
 		// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% //
