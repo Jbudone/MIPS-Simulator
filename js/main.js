@@ -71,9 +71,14 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	// UI startup
 	var UI = new UI();
 	UI.initRegisters(Specifications.registers);
+	UI.loadMemory([]); // reference to mips memory here
 
 	UI.onUserModifiedRegister = function(register, data){
 		console.log("Changed register ("+register+") to: "+data);
+	};
+
+	UI.onUserModifiedMemory = function(address, data){
+		console.log("Changed memory (0x"+address+") to: "+data);
 	};
 
 	UI.onUserAddedBreakpoint = function(lineno){
@@ -83,4 +88,5 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	UI.onUserClearedBreakpoint = function(lineno){
 		console.log("User cleared the breakpoint at ["+lineno+"]");
 	};
+
 });

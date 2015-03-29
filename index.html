@@ -65,7 +65,7 @@
 	<div id="main">
 		<div id="processor-container">
 			<div id="registers">
-
+				<div id="registers-title">Registers</div>
 			</div>
 			<canvas id="processor"></canvas>
 			<div id="controls">
@@ -73,8 +73,27 @@
 			</div>
 		</div>
 		<div id="processor-data">
-			<div id="data">
-
+			<div id="data-container">
+				<div id="data">
+					<div id="data-list"></div>
+					<div id="data-addresses"></div>
+				</div>
+				<div id="data-index">
+					<div id="data-index-container">
+						<a id="data-index-left" class="data-button flipped" href="#"><img src="styles/forward.png" /></a>
+						<a id="data-index-right" class="data-button" href="#"><img src="styles/forward.png" /></a>
+						<select id="data-address-index">
+							<option id="data-address-index-extern" address="10000000" value="addr-data-extern">0x10000000 (.extern)</option>
+							<option id="data-address-index-data" address="10010000" value="addr-data-data">0x10010000 (.data)</option>
+							<option id="data-address-index-heap" address="10040000" value="addr-data-heap">0x10040000 (.heap)</option>
+							<option disabled id="data-address-index-gp" address="$gp" value="addr-data-curgp">current $gp</option>
+							<option disabled id="data-address-index-sp" address="$sp" value="addr-data-cursp">current $sp</option>
+							<option id="data-address-index-text" address="00400000" value="addr-data-text">0x00400000 (.text)</option>
+							<option id="data-address-index-kdata" address="90000000" value="addr-data-kdata">0x90000000 (.kdata)</option>
+							<option id="data-address-index-mmio" address="ffff0000" value="addr-data-mmio">0xffff0000 (MMIO)</option>
+						</select>
+					</div>
+				</div>
 			</div>
 			<pre id="editor">
 
