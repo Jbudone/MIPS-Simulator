@@ -17,6 +17,9 @@ body {
 
 #main {
 	width: 90%;
+	min-width: 950px;
+	height:86%;
+	min-height: 600px;
 	border: thin solid #000;
 	margin: auto;
 	border-radius: 8px;
@@ -28,17 +31,23 @@ body {
 	min-height: 400px;
 }
 
+#processor-data {
+	height: 40%;
+	min-height: 200px;
+}
+
 #processor {
 	min-width: 800px;
-	width: 75%;
+	width: 85%;
 	height: 100%;
 }
 
 #registers {
-	width: 25%;
+	width: 15%;
 	float: right;
 	height: 100%;
 	overflow-y: scroll;
+	overflow-x: hidden;
 }
 
 .register {
@@ -70,7 +79,7 @@ body {
 }
 
 #editor {
-	width: 100%;
+	width: 60%;
 	min-height: 200px;
 	border-top: thin solid #000;
 }
@@ -78,4 +87,11 @@ body {
 .breakpoint {
 	background: #007BBA;
 	color: #FFF;
+}
+
+#data {
+	width: 40%;
+	min-height: 200px;
+	float: right;
+	border: thin solid #000;
 }
