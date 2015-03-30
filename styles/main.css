@@ -55,7 +55,7 @@ body {
 #registers-title {
 	text-align: center;
 	font-weight: bold;
-	background: #450B0B;
+	background: rgba(33, 47, 60, 1);
 	color: #FFF;
 }
 
@@ -186,4 +186,12 @@ body {
 	-o-transform: scale(-1, 1);
 	transform: scale(-1, 1);
 	filter: FlipH;
+}
+
+#controls {
+	position: absolute;
+	height: 40px;
+	margin-top: -25px;
+	text-align: center;
+	width: 76.5%;
 }

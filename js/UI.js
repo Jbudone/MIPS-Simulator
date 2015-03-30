@@ -56,7 +56,7 @@ define(function(){
 											.addClass('register-value')
 											.val( 0 ),
 					_regEl = $('<div/>').addClass('register')
-										.append( $('<div/>').addClass('register-name').text( regName ) )
+										.append( $('<div/>').addClass('register-name').text( '$'+regName ) )
 										.append( $('<div/>').addClass('register-value-container')
 															.append( _regValEl ) );
 
@@ -194,7 +194,7 @@ define(function(){
 
 		this.loadMemory = function(memoryRef){
 			this.memory = memoryRef;
-			this.redrawMemory(0);
+			this.redrawMemory(parseInt('0x10010000', 16));
 		};
 
 		$('#data-index-left').click(function(){

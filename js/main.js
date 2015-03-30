@@ -23,6 +23,14 @@ define(['UI', 'canvas'], function(UI, Canvas){
 		};
 
 
+	$('#control-resume').click(function(){
+		return false;
+	});
+
+	$('#control-step').click(function(){
+		return false;
+	});
+
 
 	// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% //
 	//									User Experience Stuff
