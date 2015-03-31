@@ -21,7 +21,9 @@ Wire.prototype = {
 	constructor: Wire,
 
 	putInputOnQueue: function() {
-		MIPS.queue.insert(this.input);
+		if (this.input.type !== Component.Type.Immediate) {
+			MIPS.queue.insert(this.input);
+		}
 	},
 
 	setValue: function(value) {
