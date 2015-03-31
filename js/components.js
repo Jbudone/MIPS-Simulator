@@ -332,11 +332,11 @@ Ext32.prototype.execute = function() {
 	var lower, upper;
 	if (ctrl) { /* Extending shift amount */
 		lower = this.inStore[Ext32.In.kInput].bits(6, 10).s;
-		upper = Bits.Zero64.slice(0, 27);
+		upper = Bits.kZero64.slice(0, 27);
 	}
 	else { /* Sign extending the immediate value */
 		lower = this.inStore[Ext32.In.kInput].s;
-		upper = (this.inStore[0][0] == '1') ? Bits.One64.slice(0, 16) : Bits.Zero64.slice(0, 16);
+		upper = (this.inStore[0][0] == '1') ? Bits.kOne64.slice(0, 16) : Bits.kZero64.slice(0, 16);
 	}
 	this.outStore[0] = Bits.splice(upper, this.inStore[0]);
 };
