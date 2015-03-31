@@ -10,10 +10,10 @@ function Wire(output, input, bits, points) {
 	this.bits = bits || 32;
 	this.output = output[0];
 	this.output.outputs[output[1]] = this;
-	this.output.outStore[output[1]] = Bits.kZero64.slice(0, 32);
+	this.output.outStore[output[1]] = new Bits(Bits.kZero64.slice(0, 32));
 	this.input = input[0];
 	this.input.inputs[input[1]] = this;
-	this.input.inStore[input[1]] = Bits.kZero64.slice(0, 32);
+	this.input.inStore[input[1]] = new Bits(Bits.kZero64.slice(0, 32));
 	this.value = new Bits();
 }
 
