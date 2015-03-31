@@ -80,8 +80,8 @@ Bits.prototype = {
 			return parseInt(this.s, 2);
 		}
 		else { /* Signed int */
-			var signed = bits[0] + Bits.kZero64.slice(0, bits.length-1);
-			return (-parseInt(signed, 2)) + parseInt(bits.slice(1), 2);
+			var signed = this.s[0] + Bits.kZero64.slice(0, this.s.length-1);
+			return (-parseInt(signed, 2)) + parseInt(this.s.slice(1), 2);
 		}
 	}
 };
