@@ -106,18 +106,18 @@ function buildMIPS() {
 
 	/* Connect the PC adder */
 	Wire.connect32([pc_adder, 0], [pc_adder_d1, 0]);
-	Wire.connect32([pc_adder_d1, 0], [ifid.data, IF_ID.kPCPlus4]);
+	Wire.connect32([pc_adder_d1, 0], [ifid.data, IF_ID.D.kPCPlus4]);
 
 	/* Connect the Instruction memory */
-	Wire.connect32([instr_mem, 0], [ifid.data, IF_ID.kInstr]);
+	Wire.connect32([instr_mem, 0], [ifid.data, IF_ID.D.kInstr]);
 
 	/* Connect PC Plus 4 in ID stage */
-	Wire.connect32([ifid.data, IF_ID.kPCPlus4], [pc4_s1, 0]);
-	Wire.connect32([pc4_s1, 0], [idex.data, ID_EX.kPCPlus4]); 
+	Wire.connect32([ifid.data, IF_ID.D.kPCPlus4], [pc4_s1, 0]);
+	Wire.connect32([pc4_s1, 0], [idex.data, ID_EX.D.kPCPlus4]); 
 	Wire.connect32([pc4_s1, 1], [j_splice, 0]);
 
 	/* Connect the instruction bits */
-	Wire.connect32([ifid.data, IF_ID.kInstr], [ifid_s1, 0]);
+	Wire.connect32([ifid.data, IF_ID.D.kInstr], [ifid_s1, 0]);
 	Wire.connect32([ifid_s1, 0], [ctrl, Ctrl.In.kOpcode]);
 	Wire.connect32([ifid_s1, 1], [ctrl, Ctrl.In.kFunct]);
 	Wire.connect32([ifid_s1, 2], [reg, Reg.In.kReadReg0]);
