@@ -234,3 +234,8 @@ body {
 	height: 10px;
 	margin-top: -40px;
 }
+
+#output .message {
+	float: left;
+	clear: both;
+}

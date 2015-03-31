@@ -8,11 +8,21 @@ define(function(){
 			_dataAddrEl = $('#data-addresses'),
 			_registersEl = $('#registers'),
 			_assemblyEl = $('#assembly'),
+			_outputEl = $('#output'),
 			registers = {},
 			breakpoints = {},
 			memoryI = null,
 			memoryD = null,
 			UI = this;
+
+		
+		// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% //
+		// 				Output
+		// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% //
+
+		this.output = function(message){
+			_outputEl.append( $('<span/>').addClass('message').text( message ) );
+		};
 
 		
 		// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% //
