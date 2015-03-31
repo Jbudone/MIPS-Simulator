@@ -15,13 +15,15 @@ function Wire(output, input, bits, points) {
 	this.input.inputs[input[1]] = this;
 	this.input.inStore[input[1]] = new Bits(Bits.kZero64.slice(0, 32));
 	this.value = new Bits();
+	this.changed = false;
 }
 
 Wire.prototype = {
 	constructor: Wire,
 
 	putInputOnQueue: function() {
-		if (this.input.type !== Component.Type.Immediate) {
+		if (this.input.type !== Component.Type.Immediate &&
+			 this.input.hasAllInputs()) {
 			MIPS.queue.insert(this.input);
 		}
 	},
@@ -35,9 +37,15 @@ Wire.prototype = {
 				this.input.writeOutput();
 			}
 		}
+		this.changed = true;
 		this.hasChanged();
 	},
 
+	read: function() {
+		this.changed = false;
+		return this.value;
+	},
+		
 	hasChanged: new Function()
 };
 
@@ -104,7 +112,7 @@ Component.prototype = {
 	 */
 	readInput: function() {
 		for (var i = 0; i < this.inputs.length; ++i) {
-			this.inStore[i] = this.inputs[i].value; 
+			this.inStore[i] = this.inputs[i].read(); 
 		}
 	},
 
@@ -116,6 +124,15 @@ Component.prototype = {
 			this.outputs[i].setValue(this.outStore[i]);
 			this.outputs[i].putInputOnQueue();
 		}
+	},
+
+	/* Method to see if has all inputs */
+	hasAllInputs: function() {
+		var hasAll = true;
+		for (var i = 0; i < this.inputs.length; ++i) {
+			hasAll = hasAll && this.inputs[i].changed;
+		}
+		return hasAll;
 	}
 };
 
@@ -163,6 +180,11 @@ PipelineReg.prototype = {
 	writeOutput: function() {
 		MIPS.queue.insert(this.ctrl);
 		MIPS.queue.insert(this.data);
+	},
+
+	/* Method to see if has all inputs */
+	hasAllInputs: function() {
+		return this.ctrl.hasAllInputs() && this.data.hasAllInputs();
 	}
 };
 

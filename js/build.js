@@ -97,7 +97,7 @@ function buildMIPS() {
 	Wire.connect32([r0_dup, 1], [pc_jrmux, 2]);
 
 	/* Connect the PC */
-	Wire.connect32([pc_jrmux, 0], [pc, PC.In.kInstr]);
+	Wire.connect32([pc_jrmux, 0], [pc, PC.In.kAddr]);
 	Wire.connect32([pc, 0], [pc_d1, 0]);
 	Wire.connect32([pc_d1, 0], [instr_mem, 0]);
 	Wire.connect32([pc_d1, 1], [pc_adder, 0]);
