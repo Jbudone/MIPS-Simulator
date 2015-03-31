@@ -80,7 +80,7 @@ Bits.prototype = {
 			return parseInt(this.s, 2);
 		}
 		else { /* Signed int */
-			var signed = bits[0] + Bits.Zero64.slice(0, bits.length-1);
+			var signed = bits[0] + Bits.kZero64.slice(0, bits.length-1);
 			return (-parseInt(signed, 2)) + parseInt(bits.slice(1), 2);
 		}
 	}
@@ -103,7 +103,7 @@ Bits.signed = function(val, bits) {
 	var i_val = (val < 0) ? val + Math.pow(2, bits-1) : val;
 	var lower = i_val.toString(2);
 	var upper_bits = bits - lower.length;
-	var upper = (val < 0) ? Bits.One64.slice(0, upper_bits) : Bits.Zero64.slice(0, upper_bits); 
+	var upper = (val < 0) ? Bits.One64.slice(0, upper_bits) : Bits.kZero64.slice(0, upper_bits); 
 	return new Bits(upper + lower, Bits.kSigned);
 };
 
@@ -144,5 +144,5 @@ Bits.str = function(val) {
  */
 Bits.unsigned = function(val, bits) {
 	var lower = val.toString(2);
-	return new Bits(Bits.Zero64.slice(0, bits-lower.length) + lower, Bits.kUnsigned);
+	return new Bits(Bits.kZero64.slice(0, bits-lower.length) + lower, Bits.kUnsigned);
 };

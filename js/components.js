@@ -33,7 +33,10 @@ Wire.prototype = {
 				this.input.output();
 			}
 		}
-	}
+		this.hasChanged();
+	},
+
+	hasChanged: new Function()
 };
 
 Wire.connect = function(output, input, bits, points) {
