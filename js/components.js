@@ -481,7 +481,7 @@ Ctrl.prototype.processRType = function(funct) {
 		this.outStore[Ctrl.kALUCtrl].s = ALU.Op.kSlt;
 	}
 	else if (funct[0] == '1') { /* add, sub, logic */
-		this.outStore[Ctrl.kALUCtrl].s = funct.splice(1);
+		this.outStore[Ctrl.kALUCtrl].s = funct.slice(1);
 	}
 	else if (funct[1] == '1') { /* Mult, div or move from hi/low */
 		if (funct[2] == '1') { /* Mult or Div */
