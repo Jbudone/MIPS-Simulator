@@ -2,6 +2,9 @@
  * A class that represents a string of bits.
  */
 function Bits(str, type) {
+	if (str != undefined && str != null) {
+		str = Bits.str(str);
+	}
 	this.s = str || "0";
 	this.type = type || Bits.kUnsigned;
 }
