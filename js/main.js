@@ -79,7 +79,7 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	// UI startup
 	var UI = new UI();
 	UI.initRegisters(Specifications.registers);
-	UI.loadMemory([]); // reference to mips memory here
+	UI.loadMemory([], []); // reference to mips memoryText, memoryData here
 
 	UI.onUserModifiedRegister = function(register, data){
 		console.log("Changed register ("+register+") to: "+data);

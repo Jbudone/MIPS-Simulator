@@ -87,11 +87,31 @@ body {
 	font-weight: bold;
 }
 
-#editor {
+#asm-container {
 	width: 60%;
 	height: 100%;
 	min-height: 200px;
 	border-top: thin solid #000;
+}
+
+.tab-content {
+	height: 100%;
+}
+
+#editor-container {
+	height: 100%;
+}
+
+#editor {
+	height: 100%;
+}
+
+#code {
+	height: 100%;
+}
+
+#output {
+	height: 100%;
 }
 
 .breakpoint {
@@ -194,4 +214,23 @@ body {
 	margin-top: -25px;
 	text-align: center;
 	width: 76.5%;
+}
+
+
+.nav-tabs>li {
+	margin-bottom: 1px;
+	margin-top: -20px;
+	height: 20px;
+	font-size: 14px;
+	line-height: 20px;
+	overflow: hidden;
+}
+
+.nav-tabs>li>a {
+	line-height: 0.4;
+}
+
+#tabs {
+	height: 10px;
+	margin-top: -40px;
 }

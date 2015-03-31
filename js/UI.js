@@ -10,7 +10,8 @@ define(function(){
 			_assemblyEl = $('#assembly'),
 			registers = {},
 			breakpoints = {},
-			memory = null,
+			memoryI = null,
+			memoryD = null,
 			UI = this;
 
 		
@@ -26,7 +27,25 @@ define(function(){
 		editor.setTheme('ace/theme/chrome');
 		editor.getSession().setMode('ace/mode/mips_assembler');
 
-		editor.on('breakpoint', function(e){
+		// editor.on('breakpoint', function(e){
+		// 	if (breakpoints.hasOwnProperty(e.lineno)) {
+		// 		delete breakpoints[e.lineno];
+		// 		e.session.clearBreakpoint(e.lineno, 'breakpoint');
+		// 		UI.onUserClearedBreakpoint(e.lineno);
+		// 	} else {
+		// 		breakpoints[e.lineno] = e;
+		// 		e.session.setBreakpoint(e.lineno, 'breakpoint');
+		// 		UI.onUserAddedBreakpoint(e.lineno);
+		// 	}
+		// });
+
+
+
+		var code = ace.edit('code');
+		code.setTheme('ace/theme/chrome');
+		code.getSession().setMode('ace/mode/mips_assembler');
+
+		code.on('breakpoint', function(e){
 			if (breakpoints.hasOwnProperty(e.lineno)) {
 				delete breakpoints[e.lineno];
 				e.session.clearBreakpoint(e.lineno, 'breakpoint');
@@ -126,6 +145,7 @@ define(function(){
 
 												$(this).data('safeVal', newValHex);
 												UI.onUserModifiedMemory( $(this).data('address'), newVal );
+												UI.setMem( $(this).data('address'), newVal );
 											})
 											.data('safeVal', '00000000')
 											.text('0x00000000')
@@ -161,6 +181,36 @@ define(function(){
 			}
 		}.bind(this));
 
+		this.mem = function(addr){
+			var dataStart = parseInt('10010000', 16),
+				textStart = parseInt('00400000', 16),
+				defaultMem= '00000000';
+			if (addr < 0 || addr > parseInt('ffffffff', 16)) return defaultMem;
+			if (addr < textStart) return defaultMem;
+
+			var mem = defaultMem;
+			if (addr < dataStart) {
+				mem = this.memoryI[addr - textStart] || mem; // FIXME: do we need the textStart offset here?
+			} else {
+				mem = this.memoryD[addr - dataStart] || mem; // FIXME: do we need the dataStart offset here?
+			}
+
+			return ("00000000" + mem.toString(16)).substr(-8);
+		};
+
+		this.setMem = function(addr, data){
+			var dataStart = parseInt('10010000', 16),
+				textStart = parseInt('00400000', 16),
+				defaultMem= '00000000';
+			if (addr < 0 || addr > parseInt('ffffffff', 16)) return;
+			if (addr < textStart) return;
+			if (addr < dataStart) {
+				this.memoryI[addr - textStart] = data; // FIXME: do we need the textStart offset here?
+				return;
+			}
+			this.memoryD[addr - dataStart] = data; // FIXME: do we need the dataStart offset here?
+		};
+
 		this.redrawMemory = function(addressStart){
 			addrStart = addressStart;
 
@@ -168,7 +218,7 @@ define(function(){
 			for (var i=0; i<dataCells.length; ++i) {
 				// FIXME: confirm memory layout!!
 				var dataCell = dataCells[i],
-					data = this.memory[address] || "00000000",
+					data = this.mem(address) || "00000000",
 					hexVal = data;
 					// data0Off = this.memory[address]   || 0,
 					// data1Off = this.memory[address+1] || 0,
@@ -192,8 +242,9 @@ define(function(){
 			}
 		};
 
-		this.loadMemory = function(memoryRef){
-			this.memory = memoryRef;
+		this.loadMemory = function(memoryRefI, memoryRefD){
+			this.memoryI = memoryRefI;
+			this.memoryD = memoryRefD;
 			this.redrawMemory(parseInt('0x10010000', 16));
 		};
 

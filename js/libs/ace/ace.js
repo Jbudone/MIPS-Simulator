@@ -2675,50 +2675,53 @@ function GutterHandler(mouseHandler) {
 
 	// NOTE: JB ADDED THIS
     mouseHandler.editor.setDefaultHandler("gutterclick", function(e) {
-        var gutterRegion = editor.renderer.$gutterLayer.getRegion(e);
+		var gutterRegion = editor.renderer.$gutterLayer.getRegion(e);
 
-        // if (gutterRegion != "foldWidgets") {
-            var row = e.getDocumentPosition().row;
-            var session = editor.session;
-			var line = session.doc.$lines[row];
-			var tokens = line.match(session.$mode.$tokenizer.regExps.start);
+		var doBreakpoint = true;
+		var row = e.getDocumentPosition().row;
+		var session = editor.session;
+		var line = session.doc.$lines[row];
+		var tokens = line.match(session.$mode.$tokenizer.regExps.start);
 
-			var doBreakpoint = false;
-			var breakpointRules = {
-				'support.function.pseudo.mips': true,
-				'support.function.mips': true,
-				'storage.type.mips': false,
-				'storage.modifier.mips': false,
-			};
-			if (tokens && tokens.length && tokens[0]) {
-				var token = tokens[0];
+		// FIXME: enable this again for ASM based breakpoints
+		/*
+		var doBreakpoint = false;
+		var breakpointRules = {
+			'support.function.pseudo.mips': true,
+			'support.function.mips': true,
+			'storage.type.mips': false,
+			'storage.modifier.mips': false,
+		};
+		if (tokens && tokens.length && tokens[0]) {
+			var token = tokens[0];
 
-				// If this is a label, then only look at the next token
-				if (token.match(/\b([A-Za-z0-9_]+)(:)/)) {
-					if (tokens.length == 1) return;
-					token = tokens[1];
-				}
+			// If this is a label, then only look at the next token
+			if (token.match(/\b([A-Za-z0-9_]+)(:)/)) {
+				if (tokens.length == 1) return;
+				token = tokens[1];
+			}
 
-				for (var i=0; i<session.$mode.$highlightRules.$rules.start.length; ++i) {
-					var rule = session.$mode.$highlightRules.$rules.start[i];
-					var tokenMatch = token.match(rule.regex);
-					if (tokenMatch && tokenMatch.length && tokenMatch[0]) {
-						var tokenType = rule.token;
-						if (breakpointRules[tokenType] && breakpointRules[tokenType] === true) {
-							doBreakpoint = true;
-							break;
-						}
+			for (var i=0; i<session.$mode.$highlightRules.$rules.start.length; ++i) {
+				var rule = session.$mode.$highlightRules.$rules.start[i];
+				var tokenMatch = token.match(rule.regex);
+				if (tokenMatch && tokenMatch.length && tokenMatch[0]) {
+					var tokenType = rule.token;
+					if (breakpointRules[tokenType] && breakpointRules[tokenType] === true) {
+						doBreakpoint = true;
+						break;
 					}
 				}
 			}
+		}
 
-			if (doBreakpoint) {
-				editor._dispatchEvent('breakpoint', { lineno: row, line: line, gutterEl: e.domEvent.target, session: session });
-			} else if (session.$breakpoints[row]) {
-				// Clearing a now-invalid breakpoint
-				editor._dispatchEvent('breakpoint', { lineno: row, line: line, gutterEl: e.domEvent.target, session: session });
-			}
-        // }
+		*/
+
+		if (doBreakpoint) {
+			editor._dispatchEvent('breakpoint', { lineno: row, line: line, gutterEl: e.domEvent.target, session: session });
+		} else if (session.$breakpoints[row]) {
+			// Clearing a now-invalid breakpoint
+			editor._dispatchEvent('breakpoint', { lineno: row, line: line, gutterEl: e.domEvent.target, session: session });
+		}
     });
 
 
