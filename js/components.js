@@ -112,7 +112,9 @@ Component.prototype = {
 	 */
 	readInput: function() {
 		for (var i = 0; i < this.inputs.length; ++i) {
-			this.inStore[i] = this.inputs[i].read(); 
+			if (this.inputs[i]) {
+				this.inStore[i] = this.inputs[i].read();
+			}
 		}
 	},
 
@@ -121,8 +123,10 @@ Component.prototype = {
 	 */
 	writeOutput: function() {
 		for (var i = 0; i < this.outputs.length; ++i) {
-			this.outputs[i].setValue(this.outStore[i]);
-			this.outputs[i].putInputOnQueue();
+			if (this.outputs[i]) {
+				this.outputs[i].setValue(this.outStore[i]);
+				this.outputs[i].putInputOnQueue();
+			}
 		}
 	},
 
