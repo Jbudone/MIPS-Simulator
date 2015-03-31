@@ -37,6 +37,8 @@ define(function(){
 		editor.setTheme('ace/theme/chrome');
 		editor.getSession().setMode('ace/mode/mips_assembler');
 
+		editor.setReadOnly(true);
+
 		// editor.on('breakpoint', function(e){
 		// 	if (breakpoints.hasOwnProperty(e.lineno)) {
 		// 		delete breakpoints[e.lineno];
