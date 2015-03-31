@@ -69,6 +69,35 @@ define(function(){
 			}
 		});
 
+
+		this.getCode = function(){
+			var text = code.getValue(),
+				instructions = [];
+
+			// trim out the non-code
+			text = text.trim().split('\n');
+			for (var i=0; i<text.length; ++i) {
+				var line = text[i].trim();
+				if (/^[01]+$/.test(line) && line.length == 32) {
+					instructions.push(line);
+				} else {
+					console.error("Error with this line: "+line);
+					debugger;
+				}
+			}
+			return instructions;
+		};
+
+		var highlightedLine = null;
+		this.highlightLine = function(lineno){
+
+			if (highlightedLine) {
+				code.getSession().removeMarker(highlightedLine);
+			}
+
+			highlightedLine = code.getSession().highlightLines(lineno).id;
+		};
+
 		
 		// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% //
 		// 			Register Manipulation

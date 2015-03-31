@@ -24,6 +24,7 @@ define(['UI', 'canvas'], function(UI, Canvas){
 
 
 	$('#control-resume').click(function(){
+		var code = UI.getCode();
 		return false;
 	});
 
