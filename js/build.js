@@ -101,6 +101,8 @@ function buildMIPS() {
 	Wire.connect32([pc, 0], [pc_d1, 0]);
 	Wire.connect32([pc_d1, 0], [instr_mem, 0]);
 	Wire.connect32([pc_d1, 1], [pc_adder, 0]);
+	Wire.connectConst32(0, [pc, PC.In.kPCWrite]);
+	//Wire.connect32([hazard, ...], [pc, PC.In.kPCWrite]);
 
 	/* Connect the PC adder */
 	Wire.connect32([pc_adder, 0], [pc_adder_d1, 0]);
@@ -112,7 +114,7 @@ function buildMIPS() {
 	/* Connect PC Plus 4 in ID stage */
 	Wire.connect32([ifid.data, IF_ID.kPCPlus4], [pc4_s1, 0]);
 	Wire.connect32([pc4_s1, 0], [idex.data, ID_EX.kPCPlus4]); 
-	Wire.connect32([pc4_s2, 1], [j_splice, 0]);
+	Wire.connect32([pc4_s1, 1], [j_splice, 0]);
 
 	/* Connect the instruction bits */
 	Wire.connect32([ifid.data, IF_ID.kInstr], [ifid_s1, 0]);
@@ -211,8 +213,8 @@ function buildMIPS() {
 	Wire.connect32([rt_d, 0], [rw_mux, 1]);
 	//Wire.connect32([rt_d, 1], [hazard, ...]);
 	Wire.connect32([idex.data, ID_EX.D.kRd], [rw_mux, 2]);
-	//Wire.connect32([const_ra, 0], [rw_mux, 3]);
-	//Wire.connect32([const_lo, 0], [rw_mux, 4]);
+	Wire.connectConst32(31, [rw_mux, 3]);
+	Wire.connectConst32(33, [rw_mux, 4]);
 	Wire.connect32([rw_mux, 0], [exmem.data, EX_MEM.D.kWriteReg]);
 
 	/* Connect forwarding for EX stage */
@@ -258,9 +260,9 @@ function buildMIPS() {
 
 	Wire.connect32([memwb.data, MEM_WB.D.kWriteReg], [wr_dup2, 0]);
 	//Wire.connect32([wr_dup2, 0], [hazard, ...]);
-	Wire.connect32([wr_dup2, 1], [reg, Ref.In.kWriteReg]);
+	Wire.connect32([wr_dup2, 1], [reg, Reg.In.kWriteReg]);
 
-	MIPs.queue.insert(pc);
+	MIPS.queue.insert(pc);
 }
 
 

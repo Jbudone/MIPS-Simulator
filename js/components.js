@@ -28,9 +28,9 @@ Wire.prototype = {
 		this.value = value;
 		if (this.input.type == Component.Type.Immediate) {
 			for (var i = 0; i < this.input.outputs.length; ++i) {
-				this.input.input();
+				this.input.readInput();
 				this.input.execute();
-				this.input.output();
+				this.input.writeOutput();
 			}
 		}
 		this.hasChanged();
@@ -55,6 +55,12 @@ Wire.connect16 = function(output, input, points) {
 	return new Wire(output, input, 16, points);
 };
 
+Wire.connectConst32 = function(value, input, points) {
+	value = Bits.str(value);
+	var wire = new Wire(new Component(), input, 32, points);
+	wire.setValue(new Bits(value));
+	return wire;
+};
 
 /** 
  * The base component class.
@@ -185,7 +191,7 @@ Mux.prototype.execute = function() {
 // #######################################
 // ## THE MAIN ALU
 // #######################################
-function ALU(priority) { this.intialise(priority); }
+function ALU(priority) { this.initialise(priority); }
 
 
 ALU.prototype = new Component();
@@ -243,6 +249,7 @@ ALU.prototype.execute = function() {
 	this.outStore[ALU.Out.kZero] = Bits.bit(result == neg);
 	this.outStore[ALU.Out.kResult] = Bits.signed(result, 64);
 };
+
 
 // #######################################
 // ## A 32 BIT ADDER
@@ -342,7 +349,7 @@ IMem.prototype.execute = function() {
 // #####################################
 // ## DATA MEMORY
 // #####################################
-function DMem(priority) { this.intitialise(priority); }
+function DMem(priority) { this.initialise(priority); }
 DMem.In = {kMemWrite: 0, kMemCtrl: 1, kAddr: 2, kWriteData: 3};
 DMem.Out = {kReadData: 0};
 DMem.prototype = new Component();
@@ -540,7 +547,7 @@ Ctrl.prototype.execute = function() {
 // #######################################
 function Dup(priority) {
 	this.initialise(priority);
-	this.type = Component.type.Immediate;
+	this.type = Component.Type.Immediate;
 }
 Dup.prototype = new Component();
 Dup.prototype.constructor = Dup;
@@ -557,7 +564,7 @@ Dup.prototype.execute = function() {
 // #######################################
 function Splitter(priority, bitRanges) {
 	this.initialise(priority);
-	this.type = Component.type.Immediate;
+	this.type = Component.Type.Immediate;
 	this.outputRanges = bitRanges;
 }
 Splitter.prototype = new Component();
@@ -575,7 +582,7 @@ Splitter.prototype.execute = function() {
 // #######################################
 function Splicer(priority) {
 	this.initialise(priority);
-	this.type = Component.type.Immediate;
+	this.type = Component.Type.Immediate;
 }
 Splicer.prototype = new Component();
 Splicer.prototype.constructor = Splicer;
