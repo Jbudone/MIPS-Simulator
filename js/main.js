@@ -1,34 +1,51 @@
 define(['UI', 'canvas'], function(UI, Canvas){
 
+	// TODO NOW!!
+	// 	- run until exit
+	// 	- debugger: show highlighted instruction
+	// 	- show memory changes & register changes
+	//
+	// 	- reg/mem signed numbers
+	//  - FIXME: Bits.unsigned(-1, 32)
+	//  - FIXME: Bits.signed(7, 32).toInt()
+	//  - TODO: make sure this works -- MIPS.registers[2].set(-1)
+	//  - TODO: make sure we can set values in UI registers, and that they properly reflect the expected value in MIPS.registers
+
 	Keys.add(['STAGE_IF', 'STAGE_ID', 'STAGE_EX', 'STAGE_MEM', 'STAGE_WB']); // Instruction Pipeline/stages
 
-
-	// MIPS specifications
-	//
-	// Following the O32 Calling Convention found here:
-	// http://en.wikipedia.org/wiki/MIPS_instruction_set#Compiler_register_usage
-	var Specifications = {
-			registers: [
-				'zero', // constant 0
-				'at', // assembler temporary
-				'v0', 'v1', // function return values
-				'a0', 'a1', 'a2', 'a3', // function arguments
-				't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', // temporaries
-				's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', // saved temporaries
-				't8', 't9', // temporaries
-				'k0', 'k1', // reserved for OS kernel
-				'gp', 'sp', 'fp', // global/stack/frame pointer
-				'ra' // return address
-			],
-		};
 
 
 	$('#control-resume').click(function(){
 		var code = UI.getCode();
+
+		var address = 0;
+		for (var i=0; i<code.length; ++i) {
+			var word = code[i];
+			MIPS.memory.icache.storeWord(address, word);
+			address += 4;
+		}
+		
 		return false;
 	});
 
+	var hasInitialized = false;
 	$('#control-step').click(function(){
+
+		if (!hasInitialized) {
+			var code = UI.getCode();
+
+			var address = 0;
+			for (var i=0; i<code.length; ++i) {
+				var word = code[i];
+				MIPS.memory.icache.storeWord(address, word);
+				address += 4;
+			}
+		
+			hasInitialized = true;
+		} else {
+			MIPS.execStage();
+		}
+
 		return false;
 	});
 
@@ -79,8 +96,8 @@ define(['UI', 'canvas'], function(UI, Canvas){
 
 	// UI startup
 	var UI = new UI();
-	UI.initRegisters(Specifications.registers);
-	UI.loadMemory([], []); // reference to mips memoryText, memoryData here
+	UI.initRegisters(MIPS.registers);
+	UI.loadMemory(MIPS.memory.icache.cache, MIPS.memory.dcache.cache); // reference to mips memoryText, memoryData here
 	window['UI'] = UI;
 
 	UI.onUserModifiedRegister = function(register, data){

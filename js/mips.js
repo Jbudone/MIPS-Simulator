@@ -70,13 +70,16 @@ Register.prototype = {
 
 	set: function(value) {
 		this.val = Bits.str(value);
-	}
+		this.hasChanged();
+	},
+
+	hasChanged: new Function()
 };
 
 function Mips() {
 	this.memory = new Memory();
 	this.queue = new MaxHeap();
-	var reg_names = [
+	this.reg_names = [
 		'$zero', '$at',
 		'$v0', '$v1',
 		'$a0', '$a1', '$a2', '$a3',
@@ -90,8 +93,8 @@ function Mips() {
 		'$ra'
 	];
 	this.registers = {};
-	for (var i = 0; i < reg_names.length; ++i) {
-		this.registers[i] = new Register(reg_names[i]);
+	for (var i = 0; i < this.reg_names.length; ++i) {
+		this.registers[i] = new Register(this.reg_names[i]);
 	}
 	this.registers.HI = new Register('HI');
 	this.registers.LO = new Register('LO');

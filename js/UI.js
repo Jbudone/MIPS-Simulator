@@ -107,16 +107,16 @@ define(function(){
 		this.onUserModifiedRegister = new Function();
 
 		this.initRegisters = function(regList){
-			if (!(regList instanceof Array)) throw new Error("Provided argument is not an array");
-			
-			for (var i=0; i<regList.length; ++i) {
-				var regName = regList[i];
+
+			for (var regI in regList) {
+
+				var regName = MIPS.reg_names[regI] || regI;
 
 				var _regValEl = $('<input/>').attr('type', 'text')
 											.addClass('register-value')
 											.val( 0 ),
 					_regEl = $('<div/>').addClass('register')
-										.append( $('<div/>').addClass('register-name').text( '$'+regName ) )
+										.append( $('<div/>').addClass('register-name').text( regName ) )
 										.append( $('<div/>').addClass('register-value-container')
 															.append( _regValEl ) );
 
@@ -131,10 +131,17 @@ define(function(){
 
 					newVal = parseInt(newVal);
 					UI.onUserModifiedRegister( $(this).data('regName'), newVal );
+					var newValBits = new Bits(newVal, Bits.kSigned);
+					regList[ regI ] = newValBits.toInt();
 					$(this).data('safeval', newVal);
 
 				}).data('safeval', 0)
 				.data('regName', regName);
+
+				regList[regI].hasChanged = function(){
+					var data = Bits.signed(this.val); // FIXME: check this!!
+					registers[this.name]._el.val(data).data('safeval', data);
+				};
 
 				registers[regName] = {
 					_el: _regValEl
@@ -185,7 +192,7 @@ define(function(){
 												}
 
 												$(this).data('safeVal', newValHex);
-												UI.onUserModifiedMemory( $(this).data('address'), newVal );
+												UI.onUserModifiedMemory( $(this).data('address'), Bits.signed(newVal, 32).toInt() );
 												UI.setMem( $(this).data('address'), newVal );
 											})
 											.data('safeVal', '00000000')
