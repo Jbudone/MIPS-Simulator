@@ -43,6 +43,7 @@ define(['UI', 'canvas'], function(UI, Canvas){
 		
 			hasInitialized = true;
 		} else {
+			canvas.unhighlight();
 			MIPS.execStage();
 		}
 

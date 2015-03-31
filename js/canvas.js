@@ -9,11 +9,17 @@ define(function(){
 					updateTime: 50,
 					assetsPath: 'assets/',
 
-					background: '#FAFAFA'
+					background: '#FAFAFA',
+
+					wireColour: 'rgb(0, 0, 0)',
+					wireHighlight: 'rgb(0, 0, 128)',
+					wireWidth: 1,
+					wireHighlightWidth: 3,
 				}),
 			dimensions = {},
 			components = {},
 			wires = [],
+			highlightedComponents = [],
 			holdingComponent = null,
 			hasUpdated = true,
 			assets = {};
@@ -55,10 +61,17 @@ define(function(){
 			// The start and end points will align to the center of the asset; however, if the wire is
 			// slightly slanted to go from the previous point to the last, it will attempt to horizontally and
 			// vertically align the wire.
+			ctx.strokeStyle = settings.wireColour;
+			ctx.lineWidth = settings.wireWidth;
 			for (var i=0; i<wires.length; ++i) {
 				var wire = wires[i],
 					prevPoint  = {x: wire.source.position.x, y: wire.source.position.y},
 					lastPoint  = {x: wire.destination.position.x, y: wire.destination.position.y};
+
+				if (wire.highlighted) {
+					ctx.strokeStyle = settings.wireHighlight;
+					ctx.lineWidth = settings.wireHighlightWidth;
+				}
 
 				// Center the first and last points to the center of the component
 				prevPoint.x += wire.source.dimensions.width / 2;
@@ -101,6 +114,11 @@ define(function(){
 
 				ctx.lineTo(lastPoint.x, lastPoint.y);
 				ctx.stroke();
+
+				if (wire.highlighted) {
+					ctx.strokeStyle = settings.wireColour;
+					ctx.lineWidth = settings.wireWidth;
+				}
 			}
 
 			// Draw each component
@@ -116,6 +134,16 @@ define(function(){
 					ctx.fillRect(component.position.x, component.position.y, component.dimensions.width, component.dimensions.height);
 				}
 			}
+		};
+
+		this.unhighlight = function(){
+
+			for (var i=0; i<highlightedComponents.length; ++i) {
+				highlightedComponents[i].highlighted = false;
+			}
+
+			highlightedComponents = [];
+			hasUpdated = true;
 		};
 
 		this.update = function(){
@@ -158,23 +186,40 @@ define(function(){
 
 			this.addAsset(properties.asset.id, properties.asset.file);
 
-			components[component.uid] = {
+			var _component = {
 				position: properties.position,
 				details: component,
 				region: regionID,
 				dimensions: properties.dimensions,
-				asset: assets[properties.asset.id]
+				asset: assets[properties.asset.id],
+				highlighted: false
 			};
+			components[component.uid] = _component;
+			component.hasChanged = function(){
+				highlightedComponents.push(_component);
+				_component.highlighted = true;
+				hasUpdated = true;
+			};
+
 			hasUpdated = true;
 		};
 
 		this.addWire = function(wire){
 
-			wires.push({
+			var _wire = {
 				source: components[wire.input.uid],
 				destination: components[wire.output.uid],
-				points: wire.points
-			});
+				points: wire.points,
+				highlighted: false
+			};
+
+			wires.push(_wire);
+			wire.hasChanged = function(){
+				highlightedComponents.push(_wire);
+				_wire.highlighted = true;
+				hasUpdated = true;
+			};
+
 			hasUpdated = true;
 		};
 
