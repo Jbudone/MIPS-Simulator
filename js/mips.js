@@ -59,3 +59,65 @@ MemCache.prototype = {
 		return this.cache[idx] || "00000000";
 	}
 };
+
+function Register(name) {
+	this.name = name;
+	this.val = Bits.kZero64.slice(0, 32);
+}
+
+Register.prototype = {
+	constructor: Register,
+
+	set: function(value) {
+		this.val = Bits.str(value);
+	}
+};
+
+function Mips() {
+	this.memory = new Memory();
+	this.queue = new MaxHeap();
+	var reg_names = [
+		'$zero', '$at',
+		'$v0', '$v1',
+		'$a0', '$a1', '$a2', '$a3',
+		'$t0', '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7',
+		'$s0', '$s1', '$s2', '$s3', '$s4', '$s5', '$s6', '$s7',
+		'$t8', '$t9',
+		'$k0', '$k1',
+		'$gp',
+		'$sp',
+		'$fp',
+		'$ra'
+	];
+	this.registers = {};
+	for (var i = 0; i < reg_names.length; ++i) {
+		this.registers[i] = new Register(reg_names[i]);
+	}
+	this.registers.HI = new Register('HI');
+	this.registers.LO = new Register('LO');
+}
+
+Mips.prototype = {
+	constructor: Mips,
+
+	execStage: function() {
+		var max_priority = MIPS.queue.max();
+		var to_run = [];
+		var comp = MIPS.queue.pop(max_priority);
+		while (comp) {
+			to_run.push(comp);
+			comp = MIPS.queue.pop(max_priority);
+		}
+
+		/* Run the input stage on all the components */
+		for (var i = 0; i < to_run.length; ++i) { to_run[i].readInput(); }
+
+		/* Run the execute stage on all the components */
+		for (var i = 0; i < to_run.length; ++i) { to_run[i].execute(); }
+
+		/* Run the output stage on all the components */
+		for (var i = 0; i < to_run.length; ++i) { to_run[i].writeOutput(); }
+	}
+};
+
+window.MIPS = window.MIPS || new Mips();

@@ -3,10 +3,17 @@
  * The Wire class represents a simple wired connection between components.
  */
 function Wire(output, input, bits, points) {
+	if (!output.indexOf) { output = [output, 0]; }
+	if (!input.indexOf) { input = [input, 0]; }
+	
 	this.points = points || [];
 	this.bits = bits || 32;
-	this.output = output;
-	this.input = input;
+	this.output = output[0];
+	this.output.outputs[output[1]] = this;
+	this.output.outStore[output[1]] = Bits.kZero64.slice(0, 32);
+	this.input = input[0];
+	this.input.inputs[input[1]] = this;
+	this.input.inStore[input[1]] = Bits.kZero64.slice(0, 32);
 	this.value = new Bits();
 }
 
@@ -14,14 +21,12 @@ Wire.prototype = {
 	constructor: Wire,
 
 	putInputOnQueue: function() {
-		if (!this.input.queued) {
-			/* TODO: */
-		}
+		MIPS.queue.insert(this.input);
 	},
 
 	setValue: function(value) {
 		this.value = value;
-		if (this.input.type == Component.type.Immediate) {
+		if (this.input.type == Component.Type.Immediate) {
 			for (var i = 0; i < this.input.outputs.length; ++i) {
 				this.input.input();
 				this.input.execute();
@@ -33,6 +38,10 @@ Wire.prototype = {
 
 Wire.connect = function(output, input, bits, points) {
 	return new Wire(output, input, bits, points);
+};
+
+Wire.connect64 = function(output, input, points) {
+	return new Wire(output, input, 64, points);
 };
 
 Wire.connect32 = function(output, input, points) {
@@ -48,7 +57,7 @@ Wire.connect16 = function(output, input, points) {
  * The base component class.
  */
 function Component() {
-	initialise();
+	this.initialise();
 }
 
 Component.Type = {kNormal: 0, kImmediate: 1, kComposite: 2};
@@ -116,8 +125,6 @@ PipelineReg.prototype = {
 	 * Method to initialise the component in the constructor. 
 	 */
 	initialise: function(priority) {
-		this.inputs = [];
-		this.inputMap = {ctrl: [], data: []};
 		this.ctrl = new Component(priority);
 		this.data = new Component(0);
 		this.priority = priority || 0;
@@ -133,27 +140,18 @@ PipelineReg.prototype = {
 	 * component.
 	 */
 	readInput: function() {
-		/* Read the input from the wires */
-		for (var i = 0; i < this.inputs.length; ++i) {
-			this.inStore[i] = this.inputs[i].value; 
-		}
-		/* Copy the correct inputs to the control signals and data inputs */
-		for (var i = 0; i < this.inputMap.ctrl.length; ++i) {
-			this.ctrl.inStore[i] = this.inStore[this.inputMap.ctrl[i]];
-		}
-		for (var i = 0; i < this.inputMap.data.length; ++i) {
-			this.data.inStore[i] = this.inStore[this.inputMap.data[i]];
-		}
+		/* Read the inputs for the control component */
+		this.ctrl.readInput();
+		/* Read the inputs for the data component */
+		this.data.readInput();
 	},
 
 	/**
 	 * Method to write the outputs to the output wires.
 	 */
 	writeOutput: function() {
-		if (this.inputMap.ctrl.length > 0) {
-			PUT_ON_INPUT_QUEUE(this.ctrl);
-		}
-		PUT_ON_INPUT_QUEUE(this.data);
+		MIPS.queue.insert(this.ctrl);
+		MIPS.queue.insert(this.data);
 	}
 };
 
@@ -312,7 +310,10 @@ Ext32.prototype.execute = function() {
 // ######################################
 // ## PROGRAM COUNTER (PC)
 // ######################################
-function PC(priority) { this.initialise(priority); }
+function PC(priority) {
+	this.initialise(priority);
+	this.outStore[0] = Bits.kZero64.slice(0, 32);
+}
 PC.In = {kPCWrite: 0, kAddr: 1};
 PC.prototype = new Component();
 PC.prototype.constructor = PC;
@@ -331,7 +332,7 @@ IMem.prototype = new Component();
 IMem.prototype.constructor = IMem;
 IMem.prototype.execute = function() {
 	/* Todo: Fetch instruction from global memory object */
-	var instr = MIPS.Memory.icache.loadWord(this.inStore[0]);
+	var instr = MIPS.memory.icache.loadWord(this.inStore[0]);
 	this.outStore[0] = instr;
 };
 
@@ -351,7 +352,7 @@ DMem.prototype.execute = function() {
 	var bytes = 4;
 	if (w_size == '01') { bytes = 1; }
 	else if (writeCtrl == '10') { bytes = 2; }
-	this.outStore[0] = MIPS.Memory.dcache.load(addr, bytes);
+	this.outStore[0] = MIPS.memory.dcache.load(addr, bytes);
 	if (writeCtrl.s[0] == '1') { /* Load upper */
 		this.outStore[0] = this.outStore[0].shiftLeft((4 - bytes) * 8);
 	}
@@ -359,22 +360,14 @@ DMem.prototype.execute = function() {
 	/* Write if needed */
 	var write = this.inStore[DMem.In.kMemWrite];
 	if (write.notZero()) {
-		MIPS.Memory.dcache.storeWord(addr, this.inStore[DMem.In.kWriteData], bytes);
+		MIPS.memory.dcache.storeWord(addr, this.inStore[DMem.In.kWriteData], bytes);
 	}
 };
 
 // #####################################
 // ## THE REGISTER FILE
 // #####################################
-function Reg(priority) {
-	this.initialise(priority);
-	this.registers = [];
-	for (var i = 0; i < 32; ++i) {
-		this.registers[i] = Bits.kZero64.slice(0, 32);
-	}
-	this.HI = Bits.kZero64.slice(0, 32);
-	this.LO = Bits.kZero64.slice(0, 32);
-}
+function Reg(priority) { this.initialise(priority); }
 Reg.In = {kRegWrite: 0, kReadReg0: 1, kReadReg1: 2,
 			 kWriteReg: 3, kWriteData: 4};
 Reg.Out = {kReg0: 0, kReg1: 1, kHi: 2, kLo: 3};
@@ -384,10 +377,10 @@ Reg.prototype.execute = function() {
 	/* Read from the registers */
 	var r1 = this.inStore[Reg.In.kReadReg0].toInt();
 	var r2 = this.inStore[Reg.In.kReadReg1].toInt();
-	this.outStore[Reg.Out.kReg0] = new Bits(this.registers[r1]);
-	this.outStore[Reg.Out.kReg1] = new Bits(this.registers[r2]);
-	this.outStore[Reg.Out.kHi] = new Bits(this.HI);
-	this.outStore[Reg.Out.kLo] = new Bits(this.LO);
+	this.outStore[Reg.Out.kReg0] = new Bits(MIPS.registers[r1]);
+	this.outStore[Reg.Out.kReg1] = new Bits(MIPS.registers[r2]);
+	this.outStore[Reg.Out.kHi] = new Bits(MIPS.registers.HI);
+	this.outStore[Reg.Out.kLo] = new Bits(MIPS.registers.LO);
 
 	/* Write to the write register if need to */
 	var regWrite = this.inStore[Reg.In.kRegWrite];
@@ -395,12 +388,12 @@ Reg.prototype.execute = function() {
 		var data = this.inStore[Reg.In.kWriteData];
 		if (regWrite.s == '10') {
 			/* Write to the hi and low registers */
-			this.HI = data.bits(32, 63).s;
-			this.LO = data.s.slice(0, 31).s;
+			MIPS.registers.HI.set(data.bits(32, 63));
+			MIPS.registers.LO.set(data.bits(0, 31));
 		}
 		else {
 			var wr = this.inStore[Reg.In.kWriteReg].toInt();
-			this.registers[wr] = data.bits(0, 31).s;
+			MIPS.registers[wr].set(data.bits(0, 31));
 		}
 	}
 };
@@ -423,6 +416,8 @@ Ctrl.kBranch = 8;
 Ctrl.kJump = 9;
 Ctrl.kJumpR = 10;
 Ctrl.kExtendCtrl = 11;
+
+Ctrl.In = {kOpcode: 0, kFunct: 1};
 
 Ctrl.prototype = new Component();
 Ctrl.prototype.constructor = Ctrl;
@@ -592,52 +587,32 @@ Splicer.prototype.execute = function() {
 // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 // $$ THE IF_ID PIPELINE REGISTER
 // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-function IF_ID(priority) {
-	this.initialise(priority);
-	this.inputMap.data = [0];
-}
+function IF_ID(priority) { this.initialise(priority); }
+IF_ID.D = {kPCPlus4: 0, kInstr: 1};
 IF_ID.prototype = new PipelineReg();
 IF_ID.prototype.constructor = IF_ID;
 
 // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 // $$ THE ID_EX PIPELINE REGISTER
 // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-function ID_EX(priority) {
-	this.initialise(priority);
-	this.inputMap.ctrl = [Ctrl.kRegWrite, Ctrl.kMemToReg, Ctrl.kMemWrite,
-								 Ctrl.kALUOp, Ctrl.kALUSrc0, Ctrl.kALUSrc1,
-								 Ctrl.kRegDest, Ctrl.kBranch];
-	this.inputMap.data = [ID_EX.In.kPC, ID_EX.In.kReg1, ID_EX.IN.kReg2,
-								 ID_EX.In.kI15_0, ID_EX.In.kI20_16, ID_EX.In.kI15_11];
-}
-ID_EX.In = {kPC: 8, kReg1: 9, kReg2: 10, kI15_0: 11, kI20_16: 12, kI15_11: 13};
-ID_EX.Out = {kPC: 0, kReg1: 1, kReg2: 2, kI15_0: 3, kI20_16: 4, kI15_11: 5};
+function ID_EX(priority) { this.initialise(priority); }
+ID_EX.D = {kReg0: 0, kReg1: 1, kRs: 2, kRt: 3, kRd: 4, kImmediate: 5,
+			  kPCPlus4: 6};
 ID_EX.prototype = new PipelineReg();
 ID_EX.prototype.constructor = ID_EX;
 
 // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 // $$ THE EX_MEM PIPELINE REGISTER
 // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-function EX_MEM(priority) {
-	this.initialise(priority);
-	this.inputMap.ctrl = [Ctrl.kRegWrite, Ctrl.kMemToReg, Ctrl.kMemWrite];
-	this.inputMap.data = [EX_MEM.In.kBranchAddr, EX_MEM.In.kALUZero, EX_MEM.IN.kALUResult,
-								 EX_MEM.In.kWriteData, EX_MEM.In.kWriteReg];
-}
-EX_MEM.In = {kBranchAddr: 3, kALUZero: 4, kALUResult: 5, kWriteData: 6, kWriteReg: 7};
-EX_MEM.Out = {kBranchAddr: 0, kALUZero: 1, kALUResult: 2, kWriteData: 3, kWriteReg: 4};
+function EX_MEM(priority) { this.initialise(priority); }
+EX_MEM.D = {kBranchAddr: 0, kALUZero: 1, kALUResult: 2, kWriteData: 3, kWriteReg: 4};
 EX_MEM.prototype = new PipelineReg();
 EX_MEM.prototype.constructor = EX_MEM;
 
 // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 // $$ THE MEM_WB PIPELINE REGISTER
 // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-function MEM_WB(priority) {
-	this.initialise(priority);
-	this.inputMap.ctrl = [Ctrl.kRegWrite, Ctrl.kMemToReg];
-	this.inputMap.data = [MEM_WB.In.kReadData, MEM_WB.In.kALUOut, MEM_WB.In.kWriteReg];
-}
-MEM_WB.In = {kReadData: 2, kALUOut: 3, kWriteReg: 4};
-MEM_WB.Out = {kReadData: 0, kALUOut: 1, kWriteReg: 2};
+function MEM_WB(priority) { this.initialise(priority); }
+MEM_WB.D = {kReadData: 0, kALUOut: 1, kWriteReg: 2};
 MEM_WB.prototype = new PipelineReg();
 MEM_WB.prototype.constructor = MEM_WB;
