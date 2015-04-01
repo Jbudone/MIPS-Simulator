@@ -172,14 +172,17 @@ define(function(){
 				dimensions.width = _el.width();
 				dimensions.height = _el.height();
 
-				ctx.canvas.width = dimensions.width;
-				ctx.canvas.height = dimensions.height;
+				if (dimensions.width !== ctx.canvas.width ||
+					dimensions.height !== ctx.canvas.height) {
 
-				canvasScale = (dimensions.width / dimensions.height) / (900 / 500);
+					ctx.canvas.width = dimensions.width;
+					ctx.canvas.height = dimensions.height;
+					canvasScale = (dimensions.width / dimensions.height) / (900 / 500);
+					hasUpdated = true;
+				}
 			};
 			$(window).resize(function(){
 				resetDimensions();
-				hasUpdated = true;
 			});
 			resetDimensions();
 
