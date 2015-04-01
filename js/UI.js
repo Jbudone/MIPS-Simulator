@@ -70,6 +70,7 @@ define(function(){
 		});
 
 
+		this.aceCode = code;
 		this.getCode = function(){
 			var text = code.getValue(),
 				instructions = [];
@@ -239,9 +240,9 @@ define(function(){
 
 			var mem = defaultMem;
 			if (addr < dataStart) {
-				mem = this.memoryI[addr - textStart] || mem; // FIXME: do we need the textStart offset here?
+				mem = (defaultMem + this.memoryI.loadWord(addr - textStart).toInt().toString(16)).substr(-8);
 			} else {
-				mem = this.memoryD[addr - dataStart] || mem; // FIXME: do we need the dataStart offset here?
+				mem = (defaultMem + this.memoryD.loadWord(addr - dataStart).toInt().toString(16)).substr(-8);
 			}
 
 			return ("00000000" + mem.toString(16)).substr(-8);
@@ -254,10 +255,10 @@ define(function(){
 			if (addr < 0 || addr > parseInt('ffffffff', 16)) return;
 			if (addr < textStart) return;
 			if (addr < dataStart) {
-				this.memoryI[addr - textStart] = data; // FIXME: do we need the textStart offset here?
+				this.memoryI.storeWord(addr - textStart, data);
 				return;
 			}
-			this.memoryD[addr - dataStart] = data; // FIXME: do we need the dataStart offset here?
+			this.memoryD.storeWord(addr - dataStart, data);
 		};
 
 		this.redrawMemory = function(addressStart){
@@ -265,21 +266,14 @@ define(function(){
 
 			var address = addrStart;
 			for (var i=0; i<dataCells.length; ++i) {
-				// FIXME: confirm memory layout!!
 				var dataCell = dataCells[i],
 					data = this.mem(address) || "00000000",
 					hexVal = data;
-					// data0Off = this.memory[address]   || 0,
-					// data1Off = this.memory[address+1] || 0,
-					// data2Off = this.memory[address+2] || 0,
-					// data3Off = this.memory[address+3] || 0,
-					// data     = data0Off + (data1Off << 1) + (data2Off << 2) + (data3Off << 3),
-					// hexVal   = ("00000000" + data.toString(16)).substr(-8);
 
 				dataCell.text('0x' + hexVal)
 						.data('safeVal', hexVal)
 						.data('address', address);
-				address += 1;
+				address += 4;
 			}
 
 			address = addrStart;
@@ -287,16 +281,20 @@ define(function(){
 				var addressCell = addressCells[i],
 					addrHex = ('00000000' + address.toString(16)).substr(-8);
 				addressCell.text('0x' + addrHex);
-				address += cellsPerRow;
+				address += 4*cellsPerRow;
 			}
 		};
 
 		this.loadMemory = function(memoryRefI, memoryRefD){
-			this.memoryI = memoryRefI.cache;
-			this.memoryD = memoryRefD.cache;
+			this.memoryI = memoryRefI;
+			this.memoryD = memoryRefD;
 
 			memoryRefI.hasChanged = function(){
+				UI.redrawMemory(addrStart);
+			};
 
+			memoryRefD.hasChanged = function(){
+				UI.redrawMemory(addrStart);
 			};
 
 			this.redrawMemory(parseInt('0x10010000', 16));
