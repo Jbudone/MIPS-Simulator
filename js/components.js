@@ -7,14 +7,14 @@ function Wire(output, input, bits, points) {
 	if (!input.indexOf) { input = [input, 0]; }
 	
 	this.points = points || [];
-	 this.bits = bits || 32;
-	 this.value = new Bits(Bits.kZero64.slice(0, bits));
+	this.bits = bits || 32;
+	this.value = new Bits(Bits.kZero64.slice(0, bits));
 	this.output = output[0];
 	this.output.outputs[output[1]] = this;
-	 this.output.outStore[output[1]] = this.value;
+	this.output.outStore[output[1]] = this.value;
 	this.input = input[0];
 	this.input.inputs[input[1]] = this;
-	 this.input.inStore[input[1]] = this.value;
+	this.input.inStore[input[1]] = this.value;
 	this.changed = false;
 }
 
@@ -22,8 +22,8 @@ Wire.prototype = {
 	constructor: Wire,
 
 	putInputOnQueue: function() {
-		 if (this.input.type !== Component.Type.Immediate) {
-			  MIPS.queue.insert((this.input.parent) ? this.input.parent : this.input);
+		if (this.input.type !== Component.Type.Immediate) {
+			MIPS.queue.insert((this.input.parent) ? this.input.parent : this.input);
 		}
 	},
 
@@ -44,7 +44,7 @@ Wire.prototype = {
 		this.changed = false;
 		return this.value;
 	},
-		
+	
 	hasChanged: new Function()
 };
 
@@ -166,10 +166,12 @@ PipelineReg.prototype = {
 	 * Method to initialise the component in the constructor. 
 	 */
 	initialise: function(priority) {
-		 this.ctrl = new Component(priority);
-		 this.ctrl.parent = this;
-		 this.data = new Component(0);
-		 this.data.parent = this;
+		this.uid = Component.nextUID;
+		Component.nextUID += 1;
+		this.ctrl = new Component(priority);
+		this.ctrl.parent = this;
+		this.data = new Component(0);
+		this.data.parent = this;
 		this.priority = priority || 0;
 		this.type = Component.Type.kComposite;
 		this.queued = false;
@@ -223,7 +225,7 @@ function Mux(priority) { this.initialise(priority); }
 Mux.prototype = new Component();
 Mux.prototype.constructor = Mux;
 Mux.prototype.execute = function() {
-	 var select = (this.inStore[0]) ? this.inStore[0].toInt() : 0;
+	var select = (this.inStore[0]) ? this.inStore[0].toInt() : 0;
 	this.outStore[0] = this.inStore[select + 1];
 };
 
@@ -401,7 +403,7 @@ DMem.Out = {kReadData: 0};
 DMem.prototype = new Component();
 DMem.prototype.constructor = DMem;
 DMem.prototype.execute = function() {
-	 /* Read */
+	/* Read */
 	var writeCtrl = this.inStore[DMem.In.kMemCtrl];
 	var w_size = writeCtrl.s.slice(1);
 	var addr = this.inStore[DMem.In.kAddr];
