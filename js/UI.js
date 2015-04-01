@@ -140,7 +140,7 @@ define(function(){
 
 				regList[regI].hasChanged = function(){
 					var data = Bits.signed(this.val); // FIXME: check this!!
-					registers[this.name]._el.val(data).data('safeval', data);
+					registers[this.name]._el.val(data.s).data('safeval', data.s);
 				};
 
 				registers[regName] = {
