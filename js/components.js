@@ -83,6 +83,8 @@ function Component() {
 	this.initialise();
 }
 
+Component.nextUID = 1;
+
 Component.Type = {kNormal: 0, kImmediate: 1, kComposite: 2};
 
 Component.prototype = {
@@ -92,14 +94,16 @@ Component.prototype = {
 	 * Method to initialise the component in the constructor. 
 	 */
 	initialise: function(priority) {
+		this.uid = Component.nextUID;
+		Component.nextUID += 1;
 		this.inputs = [];
 		this.outputs = [];
 		this.inStore = [];
 		this.outStore = [];
 		this.priority = priority || 0;
 		this.type = Component.Type.kNormal;
-		 this.queued = false;
-		 this.parent = null;
+		this.queued = false;
+		this.parent = null;
 	},
 
 	/**
