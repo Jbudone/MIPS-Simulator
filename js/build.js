@@ -1,15 +1,54 @@
+var ass_in = {
+	mux2: {dimensions: {width:13,height:32}, file: '2mux.png'},
+	mux3: {dimensions: {width:13,height:32}, file: '3mux.png'},
+	mux4: {dimensions: {width:13,height:32}, file: '4mux.png'},
 
-function buildMIPS() {
+	adder: {dimensions: {width:19,height:36}, file: 'adder.png'},
+	alu: {dimensions: {width:30,height:60}, file: 'alu.png'},
+	and: {dimensions: {width:18,height:16}, file: 'and.png'},
+	ctrl: {dimensions: {width:72,height:199}, file: 'control_unit.png'},
+	dmem: {dimensions: {width:69,height:65}, file: 'datamem.png'},
+	ex_mem: {dimensions: {width:23,height:355}, file: 'ex_mem.png'},
+	extend: {dimensions: {width:46,height:20}, file: 'extend.png'},
+	id_ex: {dimensions: {width:23,height:355}, file: 'id_ex.png'},
+	if_id: {dimensions: {width:23,height:189}, file: 'if_id.png'},
+	imem: {dimensions: {width:68,height:57}, file: 'instrmem.png'},
+	left: {dimensions: {width:31,height:14}, file: 'left.png'},
+	mem_wb: {dimensions: {width:23,height:355}, file: 'mem_wb.png'},
+	pc: {dimensions: {width:38,height:25}, file: 'pc.png'},
+	pc4_add: {dimensions: {width:25,height:49}, file: 'pc4_adder.png'},
+	reg: {dimensions: {width:81,height:102}, file: 'regfile.png'},
+	split: {dimensions: {width:4,height:5}, file: 'split_dup.png'},
+	dup: {dimensions: {width:4,height:5}, file: 'split_dup.png'},
+	splice: {dimensions: {width:4,height:5}, file: 'split_dup.png'}
+};
+
+function c_add(Canvas, comp, x, y, ass) {
+	Canvas.addComponent(comp, 0, {position: {x: x, y: y}, dimensions: ass_in[ass].dimensions, file: ass_in[ass].file});
+}
+
+
+function buildMIPS(c) {
 	var pc_bmux = new Mux(14);
 	var pc_jmux = new Mux(13);
 	var pc_jrmux = new Mux(12);
 	var pc = new PC(10);
 	var pc_d1 = new Dup(0);
+
+	c_add(c, pc_bmux, 21, 295, 'mux2');
+	c_add(c, pc_jmux, 38, 288, 'mux2');
+	c_add(c, pc_jrmux, 56, 281, 'mux2');
+	c_add(c, pc, 78, 284, 'pc');
+	c_add(c, pc_d1, 21, 295, 'dup');
 	
 	var pc_adder = new Adder4_32(15);
 	var pc_adder_d1 = new Dup(0);
 
+	c_add(c, pc_adder, 143, 116, 'pc4_add');
+	c_add(c, pc_adder_d1, 191, 138, 'dup');
+
 	var instr_mem = new IMem(11);
+	c_add(c, instr_mem, 146, 268, 'imem');
 
 	var ifid = new IF_ID(10);
 	ifid.ctrl.priority = 37;
@@ -25,15 +64,23 @@ function buildMIPS() {
 		[15, 0],   /* immediate */
 		[25, 0]    /* jump addr */
 	]);
+	c_add(c, ifid, 234, 120, 'if_id');
+	c_add(c, ifid_s1, 271, 294, 'split');
 
 	var pc4_s1 = new Splitter(0, [[31, 0], [31, 28]]);
 	var j_shift = new ShiftLeft2_26(17);
 	var j_splice = new Splicer(0);
+	c_add(c, pc4_s1, 267, 139, 'split');
+	c_add(c, ifid, 281, 81, 'left');
+	c_add(c, ifid, 267, 86, 'splice');
 
 	var rs_hz_d1 = new Dup(0);
 	var rt_hz_d1 = new Dup(0);
+	c_add(c, rs_hz_d1, 431, 197, 'dup');
+	c_add(c, rt_hz_d1, 441, 190, 'dup');
 
 	var ext = new Ext32(17);
+	c_add(c, ext, 337, 150, 'extend');
 
 	var reg = new Reg(17);
 	var r0_dup = new Dup(0);
@@ -41,58 +88,91 @@ function buildMIPS() {
 	var r0_fwwb_mux = new Mux(15);
 	var r1_fwwb_mux = new Mux(15);
 	var r01_fwwb_d1 = new Dup(0);
+	c_add(c, reg, 308, 210, 'reg');
+	c_add(c, r0_dup, 393, 302, 'dup');
+	c_add(c, r0_mux1, 406, 278, 'mux4');
+	c_add(c, r0_fwwb_mux, 425, 272, 'mux2');
+	c_add(c, r1_fwwb_mux, 425, 231, 'mux2');
+	c_add(c, r01_fwwb_d1, 418, 231, 'dup');
 	
 	
 	var fwwb_d1 = new Splitter(0, [[63, 0], [31, 0]]);
-
+	c_add(c, fwwb_d1, 418, 86, 'split');
+	
 	var ctrl = new Ctrl(30);
 	var alusrc0_d1 = new Dup(0);
+	c_add(c, ctrl, 338, 352, 'ctrl');
+	c_add(c, alusrc0_d1, 431, 386, 'dup');
 
 	var idex = new ID_EX(10);
 	idex.ctrl.priority = 38;
 	idex.data.priority = 23;
+	c_add(c, idex, 453, 119, 'id_ex');
 
 	var rt_d = new Dup(0);
 	var rw_mux = new Mux(18);
+	c_add(c, rt_d, 492, 190, 'dup');
+	c_add(c, rw_mux, 502, 170, 'mux3');
 
 	var fwwb_d2 = new Splitter(0, [[63, 0], [31, 0]]);	
 	var r01_fwwb_d2 = new Dup(0);
 	var r01_fwmem_d1 = new Dup(0);
+	c_add(c, fwwb_d2, 518, 86, 'split');
+	c_add(c, r01_fwwb_d2, 518, 256, 'dup');
+	c_add(c, r01_fwmem_d1, 524, 249, 'dup');
 	
 	var r0_mux2 = new Mux(18);
-
+	c_add(c, r0_mux2, 529, 275, 'mux3');
+	
 	var r1_mux1 = new Mux(18);
 	var r1_d1 = new Dup(0);
+	c_add(c, r1_mux1, 542, 242, 'mux3');
+	c_add(c, r1_d1, 555, 259, 'dup');
 	
 	var r1_mux2 = new Mux(17);
+	c_add(c, r1_mux2, 571, 239, 'mux3');
 
 	var alu = new ALU(16);
+	c_add(c, alu, 602, 244, 'alu');
 
 	var b_and = new ANDGate(15);
+	c_add(c, b_and, 640, 282, 'and');
 
 	var imm_d1 = new Dup(0);
 	var pc4_d1 = new Dup(0);
 	var imm_shift = new ShiftLeft2_32(16);
 	var b_adder = new Adder32(15);
+	c_add(c, imm_d1, 561, 158, 'dup');
+	c_add(c, pc4_d1, 565, 138, 'dup');
+	c_add(c, imm_shift, 576, 153, 'left');
+	c_add(c, b_adder, 613, 132, 'adder');
 	
 	var exmem = new EX_MEM(10);
 	exmem.ctrl.priority = 39;
 	exmem.data.priority = 24;
+	c_add(c, exmem, 666, 119, 'ex_mem');
 
 	var aout_s1 = new Splitter(0, [[31, 0], [63, 0]]);
 	var aout_s2 = new Splitter(0, [[31, 0], [63, 0]]);
-
+	c_add(c, aout_s1, 702, 272, 'split');
+	c_add(c, aout_s2, 702, 201, 'split');
+	
 	var mem = new DMem(15);
+	c_add(c, mem, 714, 222, 'dmem');
 
 	var wr_dup1 = new Dup(0);
+	c_add(c, wr_dup1, 768, 181, 'dup');
 
 	var memwb = new MEM_WB(10);
 	memwb.ctrl.priority = 40;
 	memwb.data.priority = 25;
+	c_add(c, memwb, 807, 119, 'mem_wb');
 
 	var wr_dup2 = new Dup(0);
+	c_add(c, wr_dup2, 850, 73, 'dup');
 	
 	var wrdata_mux = new Mux(20);
+	c_add(c, wr_dup1, 849, 251, 'dup');
 
 	/* Connect the muxes infront of the PC */
 	Wire.connect32([pc_adder_d1, 1], [pc_bmux, 1]);

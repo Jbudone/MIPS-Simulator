@@ -29,11 +29,13 @@ define(function(){
 		 *	nothing. A placeholder is created immediate so that components can reference the asset before its
 		 *	ready.
 		 */
-		this.addAsset = function(id, file){
+		this.addAsset = function(id, file, width, height){
 			
 			if (!assets.hasOwnProperty(id)) {
 				assets[id] = {
-					image: null
+					id: id,
+					image: null,
+					dimensions: {width: (width) ? width : 0, height: (height) ? height: 0}
 				};
 
 				var image = new Image();
@@ -181,7 +183,7 @@ define(function(){
 					{
 						position: { x: 0, y: 0 },
 						dimensions: { width: 20, height: 20 },
-						asset: { id: 'placeholder', 'file': 'smiley-face.jpg' },
+						asset: { id: 'placeholder', 'file': 'smiley-face.jpg' }
 					});
 
 			this.addAsset(properties.asset.id, properties.asset.file);
