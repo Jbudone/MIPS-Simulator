@@ -70,6 +70,7 @@ define(function(){
 		});
 
 
+		this.aceCode = code;
 		this.getCode = function(){
 			var text = code.getValue(),
 				instructions = [];

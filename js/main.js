@@ -18,21 +18,25 @@ define(['UI', 'canvas'], function(UI, Canvas){
 
 	Keys.add(['STAGE_IF', 'STAGE_ID', 'STAGE_EX', 'STAGE_MEM', 'STAGE_WB']); // Instruction Pipeline/stages
 
+	var BASIC_TESTING_MODE = 1;
 
 
 	$('#control-resume').click(function(){
-		var code = UI.getCode();
 
-		var address = 0;
+		if (BASIC_TESTING_MODE) {
+			MIPS.registers[2].set(4);
+			MIPS.registers[1].set(12);
+			UI.aceCode.getSession().setValue("00000000001000100001100000100000");
+		}
+
+		var code = UI.getCode(),
+			address = 0;
 		for (var i=0; i<code.length; ++i) {
 			var word = code[i];
 			MIPS.memory.icache.storeWord(address, word);
 			address += 4;
 		}
 
-
-		MIPS.registers[2].set(4)
-		MIPS.registers[1].set(12)
 
 		var stepCode = function(){
 			canvas.unhighlight();
