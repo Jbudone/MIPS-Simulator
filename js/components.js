@@ -7,14 +7,14 @@ function Wire(output, input, bits, points) {
 	if (!input.indexOf) { input = [input, 0]; }
 	
 	this.points = points || [];
-	this.bits = bits || 32;
+	 this.bits = bits || 32;
+	 this.value = new Bits(Bits.kZero64.slice(0, bits));
 	this.output = output[0];
 	this.output.outputs[output[1]] = this;
-	this.output.outStore[output[1]] = new Bits(Bits.kZero64.slice(0, 32));
+	 this.output.outStore[output[1]] = this.value;
 	this.input = input[0];
 	this.input.inputs[input[1]] = this;
-	this.input.inStore[input[1]] = new Bits(Bits.kZero64.slice(0, 32));
-	this.value = new Bits();
+	 this.input.inStore[input[1]] = this.value;
 	this.changed = false;
 }
 
@@ -22,14 +22,13 @@ Wire.prototype = {
 	constructor: Wire,
 
 	putInputOnQueue: function() {
-		if (this.input.type !== Component.Type.Immediate &&
-			 this.input.hasAllInputs()) {
-			MIPS.queue.insert(this.input);
+		 if (this.input.type !== Component.Type.Immediate) {
+			  MIPS.queue.insert((this.input.parent) ? this.input.parent : this.input);
 		}
 	},
 
-	setValue: function(value) {
-		this.value = value;
+	setValue: function(value, bits) {
+		this.value = new Bits(value, (value.type) ? value.type : Bits.kUnsigned, bits);
 		if (this.input.type == Component.Type.Immediate) {
 			for (var i = 0; i < this.input.outputs.length; ++i) {
 				this.input.readInput();
@@ -66,9 +65,14 @@ Wire.connect16 = function(output, input, points) {
 };
 
 Wire.connectConst32 = function(value, input, points) {
-	value = Bits.str(value);
 	var wire = new Wire(new Component(), input, 32, points);
-	wire.setValue(new Bits(value));
+	wire.setValue(value, 32);
+	return wire;
+};
+
+Wire.connectConst = function(value, input, bits, points) {
+	var wire = new Wire(new Component(), input, bits, points);
+	wire.setValue(value, bits);
 	return wire;
 };
 
@@ -94,7 +98,8 @@ Component.prototype = {
 		this.outStore = [];
 		this.priority = priority || 0;
 		this.type = Component.Type.kNormal;
-		this.queued = false;
+		 this.queued = false;
+		 this.parent = null;
 	},
 
 	/**
@@ -157,8 +162,10 @@ PipelineReg.prototype = {
 	 * Method to initialise the component in the constructor. 
 	 */
 	initialise: function(priority) {
-		this.ctrl = new Component(priority);
-		this.data = new Component(0);
+		 this.ctrl = new Component(priority);
+		 this.ctrl.parent = this;
+		 this.data = new Component(0);
+		 this.data.parent = this;
 		this.priority = priority || 0;
 		this.type = Component.Type.kComposite;
 		this.queued = false;
@@ -212,7 +219,7 @@ function Mux(priority) { this.initialise(priority); }
 Mux.prototype = new Component();
 Mux.prototype.constructor = Mux;
 Mux.prototype.execute = function() {
-	var select = this.inStore[0].toInt();
+	 var select = (this.inStore[0]) ? this.inStore[0].toInt() : 0;
 	this.outStore[0] = this.inStore[select + 1];
 };
 
@@ -245,9 +252,9 @@ ALU.fn[ALU.Op.kDiv] = ALU.fn[ALU.Op.kDivu] = function(a,b) { return a / b; };
 ALU.fn[ALU.Op.kSlt] = function(a,b) { return (a < b) ? 1 : 0; };
 
 /* 'a' is a Bits object, 'b' is a number */
-ALU.fn[ALU.Op.kSll] = function(a,b) { return a.shiftLeft(b); };
-ALU.fn[ALU.Op.kSrl] = function(a,b) { return a.shiftRight(b); };
-ALU.fn[ALU.Op.kSra] = function(a,b) { return a.shiftRightArithmetic(b); };
+ALU.fn[ALU.Op.kSll] = function(a,b) { return b.shiftLeft(a); };
+ALU.fn[ALU.Op.kSrl] = function(a,b) { return b.shiftRight(a); };
+ALU.fn[ALU.Op.kSra] = function(a,b) { return b.shiftRightArithmetic(a); };
 
 ALU.Src0 = { kRs: '00', kR0: '01', kLo: '10', kHi: '11' };
 ALU.Src1 = { kRt: '00', kR0: '01', kImmediate: '10', kPCPlus4: '11' }; 
@@ -256,26 +263,34 @@ ALU.prototype.constructor = ALU;
 ALU.prototype.execute = function() {
 	var ctrl = this.inStore[ALU.In.kALUCtrl].s;
 	var neg = parseInt(ctrl[0], 2);
-	ctrl = '0' + ctrl.splice(1);
+	ctrl = '0' + ctrl.slice(1);
 	
 	this.inStore[ALU.In.kIn0].type = Bits.kSigned;
 	this.inStore[ALU.In.kIn1].type = Bits.kSigned;
 	if ((ctrl != ALU.Op.kSlt && ctrl[1] == '1' && (ctrl[4] == '1' || ctrl[2] == '1')) ||
-		 (ctrl.splice(0, 3) == '001')) {
+		 (ctrl.slice(0, 3) == '001')) {
 		this.inStore[ALU.In.kIn0].type = Bits.kUnsigned;
 		this.inStore[ALU.In.kIn1].type = Bits.kUnsigned;
 	}
 	
 	var in0 = this.inStore[ALU.In.kIn0].toInt();
 	var in1 = this.inStore[ALU.In.kIn1].toInt();
-	
-	if (ctrl != ALU.Op.kSlt && ctrl.splice(0,3) == '011') { /* shifts */
-		in0 = this.inStore[ALU.In.kIn0];
-	}
-	var result = ALU.fn[ctrl](in0, in1);
 
-	this.outStore[ALU.Out.kZero] = Bits.bit(result == neg);
-	this.outStore[ALU.Out.kResult] = Bits.signed(result, 64);
+	var i_res = 0;
+	if (ctrl != ALU.Op.kSlt && ctrl.slice(0,3) == '011') { /* shifts */
+		in1 = this.inStore[ALU.In.kIn1];
+		var res_s = ALU.fn[ctrl](in0, in1);
+		i_res = res_s.toInt();
+		res_s.setLen(64);
+		this.outStore[ALU.Out.kResult] = res_s;
+	}
+	else {
+		i_res = ALU.fn[ctrl](in0, in1);
+		this.outStore[ALU.Out.kResult] = Bits.signed(i_res, 64);
+	}
+	/* Set zero bit */
+	if (neg) { this.outStore[ALU.Out.kZero] = Bits.bit(i_res != 0); }
+	else { this.outStore[ALU.Out.kZero] = Bits.bit(i_res == 0); }
 };
 
 
@@ -335,7 +350,7 @@ Ext32.prototype.execute = function() {
 	var ctrl = this.inStore[Ext32.In.kCtrl].toInt();
 	var lower, upper;
 	if (ctrl) { /* Extending shift amount */
-		lower = this.inStore[Ext32.In.kInput].bits(6, 10).s;
+		lower = this.inStore[Ext32.In.kInput].bits(10, 6).s;
 		upper = Bits.kZero64.slice(0, 27);
 	}
 	else { /* Sign extending the immediate value */
@@ -350,14 +365,13 @@ Ext32.prototype.execute = function() {
 // ######################################
 function PC(priority) {
 	this.initialise(priority);
-	this.outStore[0] = Bits.kZero64.slice(0, 32);
 }
-PC.In = {kPCWrite: 0, kAddr: 1};
+PC.In = {kStall: 0, kAddr: 1};
 PC.prototype = new Component();
 PC.prototype.constructor = PC;
 PC.prototype.execute = function() {
-	var signal = this.inStore[PC.In.kPCWrite].toInt();
-	if (signal) {
+	var signal = this.inStore[PC.In.kStall].toInt();
+	if (!signal) {
 		this.outStore[0] = this.inStore[PC.In.kAddr];
 	}
 };
@@ -383,7 +397,7 @@ DMem.Out = {kReadData: 0};
 DMem.prototype = new Component();
 DMem.prototype.constructor = DMem;
 DMem.prototype.execute = function() {
-	/* Read */
+	 /* Read */
 	var writeCtrl = this.inStore[DMem.In.kMemCtrl];
 	var w_size = writeCtrl.s.slice(1);
 	var addr = this.inStore[DMem.In.kAddr];
@@ -394,6 +408,8 @@ DMem.prototype.execute = function() {
 	if (writeCtrl.s[0] == '1') { /* Load upper */
 		this.outStore[0] = this.outStore[0].shiftLeft((4 - bytes) * 8);
 	}
+	/* Pad to 64 bit */
+	this.outStore[0].setLen(64);
 
 	/* Write if needed */
 	var write = this.inStore[DMem.In.kMemWrite];
@@ -412,13 +428,6 @@ Reg.Out = {kReg0: 0, kReg1: 1, kHi: 2, kLo: 3};
 Reg.prototype = new Component();
 Reg.prototype.constructor = Reg;
 Reg.prototype.execute = function() {
-	/* Read from the registers */
-	var r1 = this.inStore[Reg.In.kReadReg0].toInt();
-	var r2 = this.inStore[Reg.In.kReadReg1].toInt();
-	this.outStore[Reg.Out.kReg0] = new Bits(MIPS.registers[r1]);
-	this.outStore[Reg.Out.kReg1] = new Bits(MIPS.registers[r2]);
-	this.outStore[Reg.Out.kHi] = new Bits(MIPS.registers.HI);
-	this.outStore[Reg.Out.kLo] = new Bits(MIPS.registers.LO);
 
 	/* Write to the write register if need to */
 	var regWrite = this.inStore[Reg.In.kRegWrite];
@@ -426,22 +435,30 @@ Reg.prototype.execute = function() {
 		var data = this.inStore[Reg.In.kWriteData];
 		if (regWrite.s == '10') {
 			/* Write to the hi and low registers */
-			MIPS.registers.HI.set(data.bits(32, 63));
-			MIPS.registers.LO.set(data.bits(0, 31));
+			MIPS.registers.HI.set(data.bits(63, 32));
+			MIPS.registers.LO.set(data.bits(31, 0));
 		}
 		else {
 			var wr = this.inStore[Reg.In.kWriteReg].toInt();
-			MIPS.registers[wr].set(data.bits(0, 31));
+			if (wr != 0) { /* Don't want to write to register 0 */
+				MIPS.registers[wr].set(data.bits(31, 0));
+			}
 		}
 	}
+
+	/* Read from the registers */
+	var r1 = this.inStore[Reg.In.kReadReg0].toInt();
+	var r2 = this.inStore[Reg.In.kReadReg1].toInt();
+	this.outStore[Reg.Out.kReg0] = new Bits(MIPS.registers[r1].val);
+	this.outStore[Reg.Out.kReg1] = new Bits(MIPS.registers[r2].val);
+	this.outStore[Reg.Out.kHi] = new Bits(MIPS.registers.HI.val);
+	this.outStore[Reg.Out.kLo] = new Bits(MIPS.registers.LO.val);
 };
 
 // ######################################
 // ## THE MAIN CONTROL UNIT
 // ######################################
-function Ctrl(priority) {
-
-}
+function Ctrl(priority) { this.initialise(priority); }
 Ctrl.kRegWrite = 0;
 Ctrl.kMemToReg = 1;
 Ctrl.kMemWrite = 2;
@@ -491,7 +508,7 @@ Ctrl.prototype.processRType = function(funct) {
 		if (funct[2] == '1') { /* Mult or Div */
 			this.outStore[Ctrl.kRegWrite].s = '10';
 			this.outStore[Ctrl.kRegDest].s = '11';
-			this.outStore[Ctrl.kALUCtrl].s = '0' + funct.splice(2);
+			this.outStore[Ctrl.kALUCtrl].s = '0' + funct.slice(2);
 		}
 		else { /* Move from hi or low */
 			this.outStore[Ctrl.kALUSrc1].s = ALU.Src1.kR0;
@@ -504,7 +521,7 @@ Ctrl.prototype.processRType = function(funct) {
 		}
 	}
 	else { /* Shifts */
-		this.outStore[Ctrl.kALUCtrl].s = '011' + funct.splice(3);
+		this.outStore[Ctrl.kALUCtrl].s = '011' + funct.slice(4);
 		if (funct[3] == '0') { /* immediate (use shift amt) */
 			this.outStore[Ctrl.kExtendCtrl].s = '1';
 		}

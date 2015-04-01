@@ -1,11 +1,12 @@
 /**
  * A class that represents a string of bits.
  */
-function Bits(str, type) {
+function Bits(str, type, bits) {
+	if (!bits) { bits = 32; }
 	if (str != undefined && str != null) {
-		str = Bits.str(str);
+		 str = Bits.str(str, bits);
 	}
-	this.s = str || "0";
+	 this.s = str || Bits.kZero64.slice(0, bits);
 	this.type = type || Bits.kUnsigned;
 }
 
@@ -49,7 +50,7 @@ Bits.prototype = {
 	 * Create a new Bits object with the value of this one shifted left by 'bits'.
 	 */
 	shiftLeft: function(bits) {
-		return new Bits(this.s.splice(bits) + Bits.kZero64.slice(0, bits),
+		return new Bits(this.s.slice(bits) + Bits.kZero64.slice(0, bits),
 							 this.type);
 	},
 
@@ -58,7 +59,7 @@ Bits.prototype = {
 	 */
 	shiftRightArithmetic: function(bits) {
 		var sign = this.s[0];
-		var str = this.s.splice(0, this.s.length - bits);
+		var str = this.s.slice(0, this.s.length - bits);
 		if (sign == '0') {
 			return new Bits(Bits.kZero64.slice(0, bits) + str, this.type);
 		}
@@ -71,7 +72,7 @@ Bits.prototype = {
 	 * Create a new Bits object with the value of this one shifted right by 'bits'.
 	 */
 	shiftRight: function(bits) {
-		var str = this.s.splice(0, this.s.length - bits);
+		var str = this.s.slice(0, this.s.length - bits);
 		return new Bits(Bits.kZero64.slice(0, bits) + str, this.type);
 	},
 	
@@ -85,6 +86,19 @@ Bits.prototype = {
 		else { /* Signed int */
 			var signed = this.s[0] + Bits.kZero64.slice(0, this.s.length-1);
 			return (-parseInt(signed, 2)) + parseInt(this.s.slice(1), 2);
+		}
+	},
+
+	/* Make the bit string a certain number of bits by either padding
+	 * with zeros on the left or slicing off part of the left
+	 */
+	setLen: function(bits) {
+		var diff = bits - this.s.length;
+		if (diff > 0) {
+			this.s = Bits.kZero64.slice(0, diff) + this.s;
+		}
+		else if (diff < 0) {
+			this.s = this.s.slice(-diff);
 		}
 	}
 };
@@ -130,11 +144,12 @@ Bits.splice = function(upper, lower) {
 /**
  * Get the actual binary bit string from a value.
  */
-Bits.str = function(val) {
+Bits.str = function(val, bits) {
+	 if (!bits) { bits = 32; }
 	if (typeof(val) !== 'string') {
 		if (typeof(val) === 'number') {
-			/* Assumes unsigned */
-			return val.toString(2);
+			 /* Assumes unsigned */
+			 return Bits.unsigned(val, bits).s;
 		}
 		/* Assumes is a Bits object. */
 		return val.s;
