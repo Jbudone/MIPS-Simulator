@@ -45,6 +45,7 @@
 				$(document).ready(function(){
 
 					// Startup
+					buildMIPS();
 					require(['main']);
 				});
 
@@ -273,6 +274,9 @@ sorted:	lw		$s0, 0($sp)
 
 					<div role="tabpanel" class="tab-pane" id="code-container">
 						<pre id="code">
+00000000001000100001100000100000
+						</pre>
+						<pre id="code2" style="display:none;">
 00111100000000010001000000000001
 00110100001101100000000000000000
 00111100000000010001000000000001

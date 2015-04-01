@@ -10,6 +10,9 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	//  - FIXME: Bits.signed(7, 32).toInt()
 	//  - TODO: make sure this works -- MIPS.registers[2].set(-1)
 	//  - TODO: make sure we can set values in UI registers, and that they properly reflect the expected value in MIPS.registers
+	//
+	//  report planning
+	//
 
 	Keys.add(['STAGE_IF', 'STAGE_ID', 'STAGE_EX', 'STAGE_MEM', 'STAGE_WB']); // Instruction Pipeline/stages
 
@@ -24,6 +27,24 @@ define(['UI', 'canvas'], function(UI, Canvas){
 			MIPS.memory.icache.storeWord(address, word);
 			address += 4;
 		}
+
+
+		MIPS.registers[2].set(4)
+		MIPS.registers[1].set(12)
+
+		var stepCode = function(){
+			canvas.unhighlight();
+			try {
+				MIPS.execStage();
+				console.log("Stepping code..");
+				setTimeout( stepCode, 500 );
+			} catch(e) {
+				console.error(e);
+				debugger;
+			}
+		};
+
+		stepCode();
 		
 		return false;
 	});
@@ -37,7 +58,7 @@ define(['UI', 'canvas'], function(UI, Canvas){
 			var address = 0;
 			for (var i=0; i<code.length; ++i) {
 				var word = code[i];
-				MIPS.memory.icache.storeWord(address, word);
+				MIPS.memory.icache.storeWord(address, word, 4);
 				address += 4;
 			}
 		
