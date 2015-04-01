@@ -6,8 +6,6 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	// 	- show memory changes & register changes
 	//
 	// 	- reg/mem signed numbers
-	//  - FIXME: Bits.unsigned(-1, 32)
-	//  - TODO: make sure this works -- MIPS.registers[2].set(-1)
 	//  - FIXME: MIPS.memory.dcache.storeWord(12, -1)
 	//
 	//  report planning
