@@ -22,9 +22,8 @@ Wire.prototype = {
 	constructor: Wire,
 
 	putInputOnQueue: function() {
-		if (this.input.type !== Component.Type.Immediate &&
-			 this.input.hasAllInputs()) {
-			MIPS.queue.insert(this.input);
+		 if (this.input.type !== Component.Type.Immediate) {
+			  MIPS.queue.insert((this.input.parent) ? this.input.parent : this.input);
 		}
 	},
 
@@ -94,7 +93,8 @@ Component.prototype = {
 		this.outStore = [];
 		this.priority = priority || 0;
 		this.type = Component.Type.kNormal;
-		this.queued = false;
+		 this.queued = false;
+		 this.parent = null;
 	},
 
 	/**
@@ -157,8 +157,10 @@ PipelineReg.prototype = {
 	 * Method to initialise the component in the constructor. 
 	 */
 	initialise: function(priority) {
-		this.ctrl = new Component(priority);
-		this.data = new Component(0);
+		 this.ctrl = new Component(priority);
+		 this.ctrl.parent = this;
+		 this.data = new Component(0);
+		 this.data.parent = this;
 		this.priority = priority || 0;
 		this.type = Component.Type.kComposite;
 		this.queued = false;
@@ -212,7 +214,7 @@ function Mux(priority) { this.initialise(priority); }
 Mux.prototype = new Component();
 Mux.prototype.constructor = Mux;
 Mux.prototype.execute = function() {
-	var select = this.inStore[0].toInt();
+	 var select = (this.inStore[0]) ? this.inStore[0].toInt() : 0;
 	this.outStore[0] = this.inStore[select + 1];
 };
 

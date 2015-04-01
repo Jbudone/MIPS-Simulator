@@ -1,18 +1,19 @@
 
 function buildMIPS() {
-	var pc_bmux = new Mux(20);
-	var pc_jmux = new Mux(20);
-	var pc_jrmux = new Mux(20);
-	var pc = new PC(20);
-	var pc_d1 = new Dup(20);
+	var pc_bmux = new Mux(14);
+	var pc_jmux = new Mux(13);
+	var pc_jrmux = new Mux(12);
+	var pc = new PC(10);
+	var pc_d1 = new Dup(0);
 	
-	var pc_adder = new Adder4_32(20);
-	var pc_adder_d1 = new Dup(20);
+	var pc_adder = new Adder4_32(15);
+	var pc_adder_d1 = new Dup(0);
 
-	var instr_mem = new IMem(20);
+	var instr_mem = new IMem(11);
 
-	var ifid = new IF_ID(1);
-	var ifid_s1 = new Splitter(20, [
+	 var ifid = new IF_ID(10);
+	 ifid.data.priority = 22;
+	var ifid_s1 = new Splitter(0, [
 		[31, 26],  /* opcode for control unit */
 		[5, 0],    /* funct for ALU control */
 		[25, 21],  /* Read Register 1 */
@@ -24,65 +25,71 @@ function buildMIPS() {
 		[25, 0]    /* jump addr */
 	]);
 
-	var pc4_s1 = new Splitter(20, [[31, 0], [31, 28]]);
-	var j_shift = new ShiftLeft2_26(20);
-	var j_splice = new Splicer(20);
+	var pc4_s1 = new Splitter(0, [[31, 0], [31, 28]]);
+	var j_shift = new ShiftLeft2_26(17);
+	var j_splice = new Splicer(0);
 
-	var rs_hz_d1 = new Dup(20);
-	var rt_hz_d1 = new Dup(20);
+	var rs_hz_d1 = new Dup(0);
+	var rt_hz_d1 = new Dup(0);
 
-	var ext = new Ext32(20);
+	var ext = new Ext32(17);
 
-	var reg = new Reg(20);
-	var r0_dup = new Dup(20);
-	var r0_mux1 = new Mux(20);
-	var r0_fwwb_mux = new Mux(20);
-	var r1_fwwb_mux = new Mux(20);
-	var r01_fwwb_d1 = new Dup(20);
+	var reg = new Reg(17);
+	var r0_dup = new Dup(0);
+	var r0_mux1 = new Mux(16);
+	var r0_fwwb_mux = new Mux(15);
+	var r1_fwwb_mux = new Mux(15);
+	var r01_fwwb_d1 = new Dup(0);
 	
 	
-	var fwwb_d1 = new Splitter(20, [[63, 0], [31, 0]]);
+	var fwwb_d1 = new Splitter(0, [[63, 0], [31, 0]]);
 
-	var ctrl = new Ctrl(40);
-	var alusrc0_d1 = new Dup(40);
+	var ctrl = new Ctrl(30);
+	var alusrc0_d1 = new Dup(0);
 
-	var idex = new ID_EX(2);
+	 var idex = new ID_EX(10);
+	 idex.ctrl.priority = 38;
+	 idex.data.priority = 23;
 
-	var rt_d = new Dup(20);
-	var rw_mux = new Mux(20);
+	var rt_d = new Dup(0);
+	var rw_mux = new Mux(18);
 
-	var fwwb_d2 = new Splitter(20, [[63, 0], [31, 0]]);	
-	var r01_fwwb_d2 = new Dup(20);
-	var r01_fwmem_d1 = new Dup(20);
+	var fwwb_d2 = new Splitter(0, [[63, 0], [31, 0]]);	
+	var r01_fwwb_d2 = new Dup(0);
+	var r01_fwmem_d1 = new Dup(0);
 	
-	var r0_mux2 = new Mux(20);
+	var r0_mux2 = new Mux(18);
 
-	var r1_mux1 = new Mux(20);
-	var r1_d1 = new Dup(20);
+	var r1_mux1 = new Mux(18);
+	var r1_d1 = new Dup(0);
 	
-	var r1_mux2 = new Mux(20);
+	var r1_mux2 = new Mux(17);
 
-	var alu = new ALU(20);
+	var alu = new ALU(16);
 
-	var b_and = new ANDGate(20);
+	var b_and = new ANDGate(15);
 
-	var imm_d1 = new Dup(20);
-	var pc4_d1 = new Dup(20);
-	var imm_shift = new ShiftLeft2_32(20);
-	var b_adder = new Adder32(20);
+	var imm_d1 = new Dup(0);
+	var pc4_d1 = new Dup(0);
+	var imm_shift = new ShiftLeft2_32(16);
+	var b_adder = new Adder32(15);
 	
-	var exmem = new EX_MEM(3);
+	 var exmem = new EX_MEM(10);
+	 exmem.ctrl.priority = 39;
+	 exmem.data.priority = 24;
 
-	var aout_s1 = new Splitter(20, [[31, 0], [63, 0]]);
-	var aout_s2 = new Splitter(20, [[31, 0], [63, 0]]);
+	var aout_s1 = new Splitter(0, [[31, 0], [63, 0]]);
+	var aout_s2 = new Splitter(0, [[31, 0], [63, 0]]);
 
-	var mem = new DMem(20);
+	var mem = new DMem(15);
 
-	var wr_dup1 = new Dup(20);
+	var wr_dup1 = new Dup(0);
 
-	var memwb = new MEM_WB(4);
+	 var memwb = new MEM_WB(10);
+	 memwb.ctrl.priority = 40;
+	 memwb.data.priority = 25;
 
-	var wr_dup2 = new Dup(20);
+	var wr_dup2 = new Dup(0);
 	
 	var wrdata_mux = new Mux(20);
 
@@ -262,7 +269,11 @@ function buildMIPS() {
 	//Wire.connect32([wr_dup2, 0], [hazard, ...]);
 	Wire.connect32([wr_dup2, 1], [reg, Reg.In.kWriteReg]);
 
-	MIPS.queue.insert(pc);
+	 MIPS.queue.insert(pc);
+	 MIPS.queue.insert(ifid);
+	 MIPS.queue.insert(idex);
+	 MIPS.queue.insert(exmem);
+	 MIPS.queue.insert(memwb);
 }
 
 
