@@ -24,6 +24,7 @@ define(function(){
 			highlightedComponents = [],
 			holdingComponent = null,
 			hasUpdated = true,
+			canvasScale = 1.0,
 			assets = {};
 
 		/**
@@ -69,8 +70,8 @@ define(function(){
 			ctx.lineWidth = settings.wireWidth;
 			for (var i=0; i<wires.length; ++i) {
 				var wire = wires[i],
-					prevPoint  = {x: wire.source.position.x, y: wire.source.position.y},
-					lastPoint  = {x: wire.destination.position.x, y: wire.destination.position.y};
+					prevPoint  = {x: canvasScale*wire.source.position.x, y:      canvasScale*wire.source.position.y},
+					lastPoint  = {x: canvasScale*wire.destination.position.x, y: canvasScale*wire.destination.position.y};
 
 				if (wire.highlighted) {
 					ctx.strokeStyle = settings.wireHighlight;
@@ -88,7 +89,7 @@ define(function(){
 				ctx.beginPath();
 				ctx.moveTo(prevPoint.x, prevPoint.y);
 				for (var p=0; p<wire.points.length; ++p) {
-					var nextPoint = wire.points[p];
+					var nextPoint = canvasScale*wire.points[p];
 
 					if (settings.wirePointsGlobal) {
 						ctx.lineTo(nextPoint.x, nextPoint.y);
@@ -136,7 +137,7 @@ define(function(){
 
 				if (component.asset) {
 					if (component.asset.image) {
-						ctx.drawImage(component.asset.image, component.position.x, component.position.y, component.dimensions.width, component.dimensions.height);
+						ctx.drawImage(component.asset.image, canvasScale*component.position.x, canvasScale*component.position.y, component.dimensions.width, component.dimensions.height);
 					}
 				} else {
 					ctx.fillRect(component.position.x, component.position.y, component.dimensions.width, component.dimensions.height);
@@ -173,6 +174,8 @@ define(function(){
 
 				ctx.canvas.width = dimensions.width;
 				ctx.canvas.height = dimensions.height;
+
+				canvasScale = (dimensions.width / dimensions.height) / (900 / 500);
 			};
 			$(window).resize(function(){
 				resetDimensions();
