@@ -571,10 +571,10 @@ Ctrl.prototype.execute = function() {
 			}
 		}
 		else if (opcode[4] == '1') { /* set-on-less-than immediate */
-			this.outStore[Ctrl.kALUOp].s = ALU.Op.kSlt;
+			this.outStore[Ctrl.kALUCtrl].s = ALU.Op.kSlt;
 		}
 		else if (opcode[5] == '0') { /* addi */
-			this.outStore[Ctrl.kALUOp].s = ALU.Op.kAddu;
+			this.outStore[Ctrl.kALUCtrl].s = ALU.Op.kAddu;
 		}
 	}
 	else if (opcode[3] == '1') { /* Branch */

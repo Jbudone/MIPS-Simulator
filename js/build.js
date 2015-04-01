@@ -214,14 +214,14 @@ function buildMIPS(c) {
 
 	/* Connect the instruction bits */
 	c.addWire(Wire.connect32([ifid.data, IF_ID.D.kInstr], [ifid_s1, 0], [{x:254,y:196},{x:272,y:196}]));
-	c.addWire(Wire.connect([ifid_s1, 0], [ctrl, Ctrl.In.kOpcode], 6, [{x:272,y:196},{x:272,y:76}]));
-	c.addWire(Wire.connect([ifid_s1, 1], [ctrl, Ctrl.In.kFunct], 6));
-	c.addWire(Wire.connect([ifid_s1, 2], [reg, Reg.In.kReadReg0], 5));
-	c.addWire(Wire.connect([ifid_s1, 3], [reg, Reg.In.kReadReg1], 5));
-	c.addWire(Wire.connect([ifid_s1, 4], [rs_hz_d1, 0], 5));
-	c.addWire(Wire.connect([ifid_s1, 5], [rt_hz_d1, 0], 5));
-	c.addWire(Wire.connect([ifid_s1, 6], [idex.data, ID_EX.D.kRd], 5));
-	c.addWire(Wire.connect([ifid_s1, 7], [ext, 0], 16));
+	c.addWire(Wire.connect([ifid_s1, 0], [ctrl, Ctrl.In.kOpcode], 6, [{x:272,y:196},{x:272,y:79},{x:340,y:79}]));
+	c.addWire(Wire.connect([ifid_s1, 1], [ctrl, Ctrl.In.kFunct], 6, [{x:272,y:196},{x:272,y:91},{x:340,y:91}]));
+	c.addWire(Wire.connect([ifid_s1, 2], [reg, Reg.In.kReadReg0], 5, [{x:272,y:196},{x:309,y:196}]));
+	c.addWire(Wire.connect([ifid_s1, 3], [reg, Reg.In.kReadReg1], 5, [{x:272,y:196},{x:272,y:228},{x:310,y:228}]));
+	c.addWire(Wire.connect([ifid_s1, 4], [rs_hz_d1, 0], 5, [{x:272,y:196},{x:272,y:293},{x:432,y:293}]));
+	c.addWire(Wire.connect([ifid_s1, 5], [rt_hz_d1, 0], 5, [{x:272,y:196},{x:272,y:300},{x:442,y:300}]));
+	c.addWire(Wire.connect([ifid_s1, 6], [idex.data, ID_EX.D.kRd], 5, [{x:272,y:196},{x:272,y:307},{x:454,y:307}]));
+	c.addWire(Wire.connect([ifid_s1, 7], [ext, 0], 16, [{x:272,y:196},{x:272,y:332},{x:338,y:332}]));
 	c.addWire(Wire.connect([ifid_s1, 8], [j_shift, 0], 26));
 
 	/* Connect the jump shift */
