@@ -103,7 +103,7 @@ function Mips() {
 Mips.prototype = {
 	constructor: Mips,
 
-	execStage: function() {
+	step: function() {
 		var max_priority = MIPS.queue.max();
 		var to_run = [];
 		var comp = MIPS.queue.pop(max_priority);
@@ -120,6 +120,18 @@ Mips.prototype = {
 
 		/* Run the output stage on all the components */
 		for (var i = 0; i < to_run.length; ++i) { to_run[i].writeOutput(); }
+	},
+
+	execStage: function() {
+		/* Assumes that starting with the queue looking like:
+		 * [PC, IF_ID, ID_EX, EX_EM, MEM_WB], all with same 
+		 * priority */
+		var stage_priority = this.queue.queue[0].priority;
+
+		do {
+			this.step();
+		} while (this.queue.max() > stage_priority);
+		
 	}
 };
 
