@@ -7,14 +7,14 @@ function Wire(output, input, bits, points) {
 	if (!input.indexOf) { input = [input, 0]; }
 	
 	this.points = points || [];
-	this.bits = bits || 32;
+	 this.bits = bits || 32;
+	 this.value = new Bits(Bits.kZero64.slice(0, bits));
 	this.output = output[0];
 	this.output.outputs[output[1]] = this;
-	this.output.outStore[output[1]] = new Bits(Bits.kZero64.slice(0, 32));
+	 this.output.outStore[output[1]] = this.value;
 	this.input = input[0];
 	this.input.inputs[input[1]] = this;
-	this.input.inStore[input[1]] = new Bits(Bits.kZero64.slice(0, 32));
-	this.value = new Bits();
+	 this.input.inStore[input[1]] = this.value;
 	this.changed = false;
 }
 
@@ -65,9 +65,14 @@ Wire.connect16 = function(output, input, points) {
 };
 
 Wire.connectConst32 = function(value, input, points) {
-	value = Bits.str(value);
 	var wire = new Wire(new Component(), input, 32, points);
-	wire.setValue(new Bits(value));
+	 wire.setValue(new Bits(value, 32));
+	return wire;
+};
+
+Wire.connectConst = function(value, input, bits, points) {
+	var wire = new Wire(new Component(), input, bits, points);
+	 wire.setValue(new Bits(value, bits));
 	return wire;
 };
 
@@ -385,7 +390,8 @@ DMem.Out = {kReadData: 0};
 DMem.prototype = new Component();
 DMem.prototype.constructor = DMem;
 DMem.prototype.execute = function() {
-	/* Read */
+	 /* Read */
+	 asdas dasd asd asd asd asd a;qlk2498739123(*&*@&^#*
 	var writeCtrl = this.inStore[DMem.In.kMemCtrl];
 	var w_size = writeCtrl.s.slice(1);
 	var addr = this.inStore[DMem.In.kAddr];

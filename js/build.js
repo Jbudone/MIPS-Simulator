@@ -108,7 +108,7 @@ function buildMIPS() {
 	Wire.connect32([pc, 0], [pc_d1, 0]);
 	Wire.connect32([pc_d1, 0], [instr_mem, 0]);
 	Wire.connect32([pc_d1, 1], [pc_adder, 0]);
-	Wire.connectConst32(0, [pc, PC.In.kPCWrite]);
+	 Wire.connectConst(0, [pc, PC.In.kPCWrite], 1);
 	//Wire.connect32([hazard, ...], [pc, PC.In.kPCWrite]);
 
 	/* Connect the PC adder */
@@ -121,30 +121,32 @@ function buildMIPS() {
 	/* Connect PC Plus 4 in ID stage */
 	Wire.connect32([ifid.data, IF_ID.D.kPCPlus4], [pc4_s1, 0]);
 	Wire.connect32([pc4_s1, 0], [idex.data, ID_EX.D.kPCPlus4]); 
-	Wire.connect32([pc4_s1, 1], [j_splice, 0]);
+	 Wire.connect([pc4_s1, 1], [j_splice, 0], 4);
 
 	/* Connect the instruction bits */
 	Wire.connect32([ifid.data, IF_ID.D.kInstr], [ifid_s1, 0]);
-	Wire.connect32([ifid_s1, 0], [ctrl, Ctrl.In.kOpcode]);
-	Wire.connect32([ifid_s1, 1], [ctrl, Ctrl.In.kFunct]);
-	Wire.connect32([ifid_s1, 2], [reg, Reg.In.kReadReg0]);
-	Wire.connect32([ifid_s1, 3], [reg, Reg.In.kReadReg1]);
-	Wire.connect32([ifid_s1, 4], [rs_hz_d1, 0]);
-	Wire.connect32([ifid_s1, 5], [rt_hz_d1, 0]);
-	Wire.connect32([ifid_s1, 6], [idex.data, ID_EX.D.kRd]);
-	Wire.connect32([ifid_s1, 7], [ext, 0]);
-	Wire.connect32([ifid_s1, 8], [j_shift, 0]);
+	 Wire.connect([ifid_s1, 0], [ctrl, Ctrl.In.kOpcode], 6);
+	 Wire.connect([ifid_s1, 1], [ctrl, Ctrl.In.kFunct], 6);
+	 Wire.connect([ifid_s1, 2], [reg, Reg.In.kReadReg0], 5);
+	 Wire.connect([ifid_s1, 3], [reg, Reg.In.kReadReg1], 5);
+	 Wire.connect([ifid_s1, 4], [rs_hz_d1, 0], 5);
+	 Wire.connect([ifid_s1, 5], [rt_hz_d1, 0], 5);
+	 Wire.connect([ifid_s1, 6], [idex.data, ID_EX.D.kRd], 5);
+	 Wire.connect([ifid_s1, 7], [ext, 0], 16);
+	 Wire.connect([ifid_s1, 8], [j_shift, 0], 26);
 
 	/* Connect the jump shift */
-	Wire.connect32([j_shift, 0], [j_splice, 1]);
+	 Wire.connect([j_shift, 0], [j_splice, 1], 28);
 
 	/* Connect the extender */
 	Wire.connect32([ext, 0], [idex.data, ID_EX.D.kImmediate]);
 
 	/* Connect register output */
-	Wire.connect32([reg, Reg.Out.kReg0], [r0_mux1, 1]);
+	 Wire.connect32([reg, Reg.Out.kReg0], [r0_mux1, 1]);
+	 Wire.connectConst32(0, [r0_mux1, 2]);
 	Wire.connect32([reg, Reg.Out.kLo], [r0_mux1, 3]);
-	Wire.connect32([reg, Reg.Out.kHi], [r0_mux1, 4]);
+	 Wire.connect32([reg, Reg.Out.kHi], [r0_mux1, 4]);
+
 	Wire.connect32([r0_mux1, 0], [r0_fwwb_mux, 1]);
 	Wire.connect32([r01_fwwb_d1, 0], [r0_fwwb_mux, 2]);
 	Wire.connect32([r0_fwwb_mux, 0], [idex.data, ID_EX.D.kReg0]);
@@ -154,43 +156,42 @@ function buildMIPS() {
 	Wire.connect32([r1_fwwb_mux, 0], [idex.data, ID_EX.D.kReg1]);
 
 	/* Connect Rs and Rd duplicators */
-	Wire.connect32([rs_hz_d1, 0], [idex.data, ID_EX.D.kRs]);
-	//Wire.connect32([rs_hz_d1, 1], [hazard, ...]);
-	Wire.connect32([rt_hz_d1, 0], [idex.data, ID_EX.D.kRt]);
-	//Wire.connect32([rt_hz_d1, 1], [hazard, ...]);
+	 Wire.connect([rs_hz_d1, 0], [idex.data, ID_EX.D.kRs], 5);
+	//Wire.connect([rs_hz_d1, 1], [hazard, ...], 5);
+	 Wire.connect([rt_hz_d1, 0], [idex.data, ID_EX.D.kRt], 5);
+	//Wire.connect([rt_hz_d1, 1], [hazard, ...], 5);
 
 	/* Connect control signals for ID stage */
-	Wire.connect32([ctrl, Ctrl.kRegWrite], [idex.ctrl, Ctrl.kRegWrite]);
-	Wire.connect32([ctrl, Ctrl.kMemToReg], [idex.ctrl, Ctrl.kMemToReg]);
-	Wire.connect32([ctrl, Ctrl.kMemWrite], [idex.ctrl, Ctrl.kMemWrite]);
-	Wire.connect32([ctrl, Ctrl.kMemCtrl], [idex.ctrl, Ctrl.kMemCtrl]);
-	Wire.connect32([ctrl, Ctrl.kALUCtrl], [idex.ctrl, Ctrl.kALUCtrl]);
-	Wire.connect32([ctrl, Ctrl.kALUSrc0], [alusrc0_d1, 0]);
-	Wire.connect32([alusrc0_d1, 0], [idex.ctrl, Ctrl.kALUSrc0]);
-	Wire.connect32([alusrc0_d1, 1], [r0_mux1, 0]);
-	Wire.connect32([ctrl, Ctrl.kALUSrc1], [idex.ctrl, Ctrl.kALUSrc1]);
-	Wire.connect32([ctrl, Ctrl.kRegDest], [idex.ctrl, Ctrl.kRegDest]);
-	Wire.connect32([ctrl, Ctrl.kBranch], [idex.ctrl, Ctrl.kBranch]);
-	Wire.connect32([ctrl, Ctrl.kJump], [pc_jmux, 0]);
-	Wire.connect32([ctrl, Ctrl.kJumpR], [pc_jrmux, 0]);
-	Wire.connect32([ctrl, Ctrl.kExtendCtrl], [ext, Ext32.In.kCtrl]);
+	 Wire.connect([ctrl, Ctrl.kRegWrite], [idex.ctrl, Ctrl.kRegWrite], 2);
+	 Wire.connect([ctrl, Ctrl.kMemToReg], [idex.ctrl, Ctrl.kMemToReg], 1);
+	 Wire.connect([ctrl, Ctrl.kMemWrite], [idex.ctrl, Ctrl.kMemWrite], 1);
+	 Wire.connect([ctrl, Ctrl.kMemCtrl], [idex.ctrl, Ctrl.kMemCtrl], 3);
+	 Wire.connect([ctrl, Ctrl.kALUCtrl], [idex.ctrl, Ctrl.kALUCtrl], 5);
+	 Wire.connect([ctrl, Ctrl.kALUSrc0], [alusrc0_d1, 0], 2);
+	 Wire.connect([alusrc0_d1, 0], [idex.ctrl, Ctrl.kALUSrc0], 2);
+	 Wire.connect([alusrc0_d1, 1], [r0_mux1, 0], 2);
+	 Wire.connect([ctrl, Ctrl.kALUSrc1], [idex.ctrl, Ctrl.kALUSrc1], 2);
+	 Wire.connect([ctrl, Ctrl.kRegDest], [idex.ctrl, Ctrl.kRegDest], 2);
+	 Wire.connect([ctrl, Ctrl.kBranch], [idex.ctrl, Ctrl.kBranch], 1);
+	 Wire.connect([ctrl, Ctrl.kJump], [pc_jmux, 0], 1);
+	 Wire.connect([ctrl, Ctrl.kJumpR], [pc_jrmux, 0], 1);
+	 Wire.connect([ctrl, Ctrl.kExtendCtrl], [ext, Ext32.In.kCtrl], 1);
 
 	/* Connect forwarding for EX stage */
 	Wire.connect32([fwwb_d1, 1], [r01_fwwb_d1, 0]);
-	Wire.connect32([fwwb_d1, 0], [reg, Reg.In.kWriteData]);
+	Wire.connect64([fwwb_d1, 0], [reg, Reg.In.kWriteData]);
 
 	/* Connect control signals for EX stage */
-	Wire.connect32([idex.ctrl, Ctrl.kRegWrite], [exmem.ctrl, Ctrl.kRegWrite]);
-	Wire.connect32([idex.ctrl, Ctrl.kMemToReg], [exmem.ctrl, Ctrl.kMemToReg]);
-	Wire.connect32([idex.ctrl, Ctrl.kMemWrite], [exmem.ctrl, Ctrl.kMemWrite]);
-	Wire.connect32([idex.ctrl, Ctrl.kMemCtrl], [exmem.ctrl, Ctrl.kMemCtrl]);
-	Wire.connect32([idex.ctrl, Ctrl.kRegWrite], [exmem.ctrl, Ctrl.kRegWrite]);
+	 Wire.connect([idex.ctrl, Ctrl.kRegWrite], [exmem.ctrl, Ctrl.kRegWrite], 2);
+	 Wire.connect([idex.ctrl, Ctrl.kMemToReg], [exmem.ctrl, Ctrl.kMemToReg], 1);
+	 Wire.connect([idex.ctrl, Ctrl.kMemWrite], [exmem.ctrl, Ctrl.kMemWrite], 1);
+	 Wire.connect([idex.ctrl, Ctrl.kMemCtrl], [exmem.ctrl, Ctrl.kMemCtrl], 3);
 
-	Wire.connect32([idex.ctrl, Ctrl.kBranch], [b_and, 0]);
-	Wire.connect32([idex.ctrl, Ctrl.kALUCtrl], [alu, ALU.In.kALUCtrl]);
-	//Wire.connect32([idex.ctrl, Ctrl.kALUSrc0], [hazard, ...]);
-	//Wire.connect32([idex.ctrl, Ctrl.kALUSrc1], [hazard, ...]);
-	Wire.connect32([idex.ctrl, Ctrl.kRegDest], [rw_mux, 0]);
+	 Wire.connect([idex.ctrl, Ctrl.kBranch], [b_and, 0], 1);
+	 Wire.connect([idex.ctrl, Ctrl.kALUCtrl], [alu, ALU.In.kALUCtrl], 5);
+	//Wire.connect([idex.ctrl, Ctrl.kALUSrc0], [hazard, ...], 2);
+	//Wire.connect([idex.ctrl, Ctrl.kALUSrc1], [hazard, ...], 2);
+	 Wire.connect([idex.ctrl, Ctrl.kRegDest], [rw_mux, 0], 2);
 
 	/* Connect the ALU inputs */
 	Wire.connect32([idex.data, ID_EX.D.kReg0], [r0_mux2, 1]);
@@ -215,59 +216,59 @@ function buildMIPS() {
 	Wire.connect32([pc4_d1, 0], [b_adder, 1]);
 
 	/* Connect the Write Register mux */
-	//Wire.connect32([idex.data, ID_EX.D.kRs], [hazard, ...]);
-	Wire.connect32([idex.data, ID_EX.D.kRt], [rt_d, 0]);
-	Wire.connect32([rt_d, 0], [rw_mux, 1]);
-	//Wire.connect32([rt_d, 1], [hazard, ...]);
-	Wire.connect32([idex.data, ID_EX.D.kRd], [rw_mux, 2]);
-	Wire.connectConst32(31, [rw_mux, 3]);
-	Wire.connectConst32(33, [rw_mux, 4]);
-	Wire.connect32([rw_mux, 0], [exmem.data, EX_MEM.D.kWriteReg]);
+	//Wire.connect([idex.data, ID_EX.D.kRs], [hazard, ...], 5);
+	 Wire.connect([idex.data, ID_EX.D.kRt], [rt_d, 0], 5);
+	 Wire.connect([rt_d, 0], [rw_mux, 1], 5);
+	//Wire.connect([rt_d, 1], [hazard, ...], 5);
+	 Wire.connect([idex.data, ID_EX.D.kRd], [rw_mux, 2], 5);
+	 Wire.connectConst(31, [rw_mux, 3], 5);
+	 Wire.connectConst(33, [rw_mux, 4], 5);
+	 Wire.connect([rw_mux, 0], [exmem.data, EX_MEM.D.kWriteReg], 5);
 
 	/* Connect forwarding for EX stage */
 	Wire.connect32([fwwb_d2, 1], [r01_fwwb_d2, 0]);
-	Wire.connect32([fwwb_d2, 0], [fwwb_d1, 0]);
+	Wire.connect64([fwwb_d2, 0], [fwwb_d1, 0]);
 
 	/* Connect write data */
 	Wire.connect32([r1_d1, 1], [exmem.data, EX_MEM.D.kWriteData]);
 
 	/* Connect ALU outputs and branch */
-	Wire.connect32([alu, ALU.Out.kZero], [b_and, 1]);
-	Wire.connect32([b_and, 0], [pc_bmux, 0]);
-	Wire.connect32([alu, ALU.Out.kResult], [exmem.data, EX_MEM.D.kALUResult]);
+	 Wire.connect([alu, ALU.Out.kZero], [b_and, 1], 1);
+	 Wire.connect([b_and, 0], [pc_bmux, 0], 1);
+	Wire.connect64([alu, ALU.Out.kResult], [exmem.data, EX_MEM.D.kALUResult]);
 
 	/* Connect control signals for MEM Stage */
-	Wire.connect32([exmem.ctrl, Ctrl.kRegWrite], [memwb.ctrl, Ctrl.kRegWrite]);
-	Wire.connect32([exmem.ctrl, Ctrl.kMemToReg], [memwb.ctrl, Ctrl.kMemToReg]);
-	Wire.connect32([exmem.ctrl, Ctrl.kMemWrite], [mem, DMem.In.kMemWrite]);
-	Wire.connect32([exmem.ctrl, Ctrl.kMemCtrl], [mem, DMem.In.kMemCtrl]);
+	 Wire.connect([exmem.ctrl, Ctrl.kRegWrite], [memwb.ctrl, Ctrl.kRegWrite], 2);
+	 Wire.connect([exmem.ctrl, Ctrl.kMemToReg], [memwb.ctrl, Ctrl.kMemToReg], 1);
+	 Wire.connect([exmem.ctrl, Ctrl.kMemWrite], [mem, DMem.In.kMemWrite], 1);
+	 Wire.connect([exmem.ctrl, Ctrl.kMemCtrl], [mem, DMem.In.kMemCtrl], 3);
 
 	/* Connect memory */
-	Wire.connect32([exmem.data, EX_MEM.D.kALUResult], [aout_s1, 0]);
+	Wire.connect64([exmem.data, EX_MEM.D.kALUResult], [aout_s1, 0]);
 	Wire.connect32([aout_s1, 0], [mem, DMem.In.kAddr]);
-	Wire.connect32([aout_s1, 1], [aout_s2, 0]);
+	Wire.connect64([aout_s1, 1], [aout_s2, 0]);
 	Wire.connect32([aout_s2, 0], [r01_fwmem_d1, 0]);
-	Wire.connect32([aout_s2, 1], [memwb.data, MEM_WB.D.kALUOut]);
+	Wire.connect64([aout_s2, 1], [memwb.data, MEM_WB.D.kALUOut]);
 	Wire.connect32([exmem.data, EX_MEM.D.kWriteData], [mem, DMem.In.kWriteData]);
 
-	Wire.connect32([mem, DMem.Out.kReadData], [memwb.data, MEM_WB.D.kReadData]);
+	Wire.connect64([mem, DMem.Out.kReadData], [memwb.data, MEM_WB.D.kReadData]);
 
-	Wire.connect32([exmem.data, EX_MEM.D.kWriteReg], [wr_dup1, 0]);
-	Wire.connect32([wr_dup1, 0], [memwb.data, MEM_WB.D.kWriteReg]);
-	//Wire.connect32([wr_dup1, 1], [hazard, ...]);
+	 Wire.connect([exmem.data, EX_MEM.D.kWriteReg], [wr_dup1, 0], 5);
+	 Wire.connect([wr_dup1, 0], [memwb.data, MEM_WB.D.kWriteReg], 5);
+	//Wire.connect([wr_dup1, 1], [hazard, ...], 5);
 
 	/* Connect signals for WB stage */
-	Wire.connect32([memwb.ctrl, Ctrl.kRegWrite], [reg, Reg.In.kRegWrite]);
-	Wire.connect32([memwb.ctrl, Ctrl.kMemToReg], [wrdata_mux, 0]);
+	 Wire.connect([memwb.ctrl, Ctrl.kRegWrite], [reg, Reg.In.kRegWrite], 2);
+	 Wire.connect([memwb.ctrl, Ctrl.kMemToReg], [wrdata_mux, 0], 3);
 
 	/* Connect Everything else */
-	Wire.connect32([memwb.data, MEM_WB.D.kALUOut], [wrdata_mux, 1]);
-	Wire.connect32([memwb.data, MEM_WB.D.kReadData], [wrdata_mux, 2]);
-	Wire.connect32([wrdata_mux, 0], [fwwb_d2, 0]);
+	Wire.connect64([memwb.data, MEM_WB.D.kALUOut], [wrdata_mux, 1]);
+	Wire.connect64([memwb.data, MEM_WB.D.kReadData], [wrdata_mux, 2]);
+	Wire.connect64([wrdata_mux, 0], [fwwb_d2, 0]);
 
-	Wire.connect32([memwb.data, MEM_WB.D.kWriteReg], [wr_dup2, 0]);
-	//Wire.connect32([wr_dup2, 0], [hazard, ...]);
-	Wire.connect32([wr_dup2, 1], [reg, Reg.In.kWriteReg]);
+	 Wire.connect([memwb.data, MEM_WB.D.kWriteReg], [wr_dup2, 0], 5);
+	//Wire.connect([wr_dup2, 0], [hazard, ...], 5);
+	 Wire.connect([wr_dup2, 1], [reg, Reg.In.kWriteReg], 5);
 
 	 MIPS.queue.insert(pc);
 	 MIPS.queue.insert(ifid);

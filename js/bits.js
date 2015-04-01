@@ -1,11 +1,12 @@
 /**
  * A class that represents a string of bits.
  */
-function Bits(str, type) {
+function Bits(str, type, bits) {
+	 if (!bits) { bits = 32; }
 	if (str != undefined && str != null) {
-		str = Bits.str(str);
+		 str = Bits.str(str, bits);
 	}
-	this.s = str || "0";
+	 this.s = str || Bits.kZero64.slice(0, bits);
 	this.type = type || Bits.kUnsigned;
 }
 
@@ -130,11 +131,12 @@ Bits.splice = function(upper, lower) {
 /**
  * Get the actual binary bit string from a value.
  */
-Bits.str = function(val) {
+Bits.str = function(val, bits) {
+	 if (!bits) { bits = 32; }
 	if (typeof(val) !== 'string') {
 		if (typeof(val) === 'number') {
-			/* Assumes unsigned */
-			return val.toString(2);
+			 /* Assumes unsigned */
+			 return Bits.unsigned(val, bits).s;
 		}
 		/* Assumes is a Bits object. */
 		return val.s;
