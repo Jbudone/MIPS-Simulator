@@ -15,6 +15,8 @@ define(function(){
 					wireHighlight: 'rgb(0, 0, 128)',
 					wireWidth: 1,
 					wireHighlightWidth: 3,
+
+					wirePointsGlobal: true, // Are we using relative or global positions for wire points??
 				}),
 			dimensions = {},
 			components = {},
@@ -88,7 +90,11 @@ define(function(){
 				for (var p=0; p<wire.points.length; ++p) {
 					var nextPoint = wire.points[p];
 
-					ctx.lineTo(prevPoint.x + nextPoint.x, prevPoint.y + nextPoint.y);
+					if (settings.wirePointsGlobal) {
+						ctx.lineTo(nextPoint.x, nextPoint.y);
+					} else {
+						ctx.lineTo(prevPoint.x + nextPoint.x, prevPoint.y + nextPoint.y);
+					}
 
 					prevPoint.x += nextPoint.x;
 					prevPoint.y += nextPoint.y;
