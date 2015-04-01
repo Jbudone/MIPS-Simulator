@@ -7,9 +7,8 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	//
 	// 	- reg/mem signed numbers
 	//  - FIXME: Bits.unsigned(-1, 32)
-	//  - FIXME: Bits.signed(7, 32).toInt()
 	//  - TODO: make sure this works -- MIPS.registers[2].set(-1)
-	//  - TODO: make sure we can set values in UI registers, and that they properly reflect the expected value in MIPS.registers
+	//  - FIXME: MIPS.memory.dcache.storeWord(12, -1)
 	//
 	//  report planning
 	//
@@ -111,7 +110,8 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	// the 2nd is the stage which it belongs to. The stage may be helpful for highlighting components in an
 	// active stage or something...or maybe not.
 	canvas.addComponent(placeholders.components[0], STAGE_IF, { position: {x:50, y:80} });
-	canvas.addComponent(placeholders.components[1], STAGE_ID, { position: {x:200, y:100}, dimensions: {width:50, height:60} });
+	canvas.addComponent(placeholders.components[1], STAGE_ID, { position: {x:200, y:100}, dimensions: {width:50, height:60}, asset: { id: 'placeholder', 'file': 'smiley-face.jpg' } });
+						
 	canvas.addComponent(placeholders.components[2], STAGE_EX, { position: {x:400, y:300} });
 
 	// Wires should be able to add naturally based off the current Wire prototype
