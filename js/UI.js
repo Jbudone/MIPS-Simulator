@@ -132,8 +132,8 @@ define(function(){
 
 					newVal = parseInt(newVal);
 					UI.onUserModifiedRegister( $(this).data('regName'), newVal );
-					var newValBits = Bits.signed(newVal, 32);
-					regList[ $(this).data('regI') ].set( parseInt(newValBits.s, 2) ); // FIXME: check this!!
+					var newValBits = Bits.unsigned( Bits.signed(newVal, 32).s, 32 ); // Convert to signed in case negative, then unsigned since register must be unsigned
+					regList[ $(this).data('regI') ].set( newValBits.toInt() );
 					$(this).data('safeval', newVal);
 
 				}).data('safeval', 0)
@@ -141,8 +141,8 @@ define(function(){
 				.data('regI', regI);
 
 				regList[regI].hasChanged = function(){
-					var data = Bits.signed(this.val, 32).toInt(); // FIXME: check this!!
-					registers[this.name]._el.val(data).data('safeval', data);
+					var data = Bits.signed( Bits.unsigned(this.val, 32).s, 32 );
+					registers[this.name]._el.val(data.toInt()).data('safeval', data.toInt());
 				};
 
 				registers[regName] = {
