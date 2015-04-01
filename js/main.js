@@ -13,6 +13,9 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	//
 	//  report planning
 	//
+	//  visual assets into canvas + wires
+	//  adjust wires/points & positions to be relative & responsive
+	//  
 
 	Keys.add(['STAGE_IF', 'STAGE_ID', 'STAGE_EX', 'STAGE_MEM', 'STAGE_WB']); // Instruction Pipeline/stages
 
@@ -103,6 +106,7 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	});
 
 
+	/*
 	// We can add components to the canvas here, the first argument will be the actual component object and
 	// the 2nd is the stage which it belongs to. The stage may be helpful for highlighting components in an
 	// active stage or something...or maybe not.
@@ -114,12 +118,14 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	canvas.addWire(placeholders.wires[0]);
 	canvas.addWire(placeholders.wires[1]);
 	canvas.addWire(placeholders.wires[2]);
+	*/
 
+	buildMIPS(canvas);
 
 	// UI startup
 	var UI = new UI();
 	UI.initRegisters(MIPS.registers);
-	UI.loadMemory(MIPS.memory.icache.cache, MIPS.memory.dcache.cache); // reference to mips memoryText, memoryData here
+	UI.loadMemory(MIPS.memory.icache, MIPS.memory.dcache); // reference to mips memoryText, memoryData here
 	window['UI'] = UI;
 
 	UI.onUserModifiedRegister = function(register, data){

@@ -120,7 +120,7 @@ Bits.signed = function(val, bits) {
 	var i_val = (val < 0) ? val + Math.pow(2, bits-1) : val;
 	var lower = i_val.toString(2);
 	var upper_bits = bits - lower.length;
-	var upper = (val < 0) ? Bits.One64.slice(0, upper_bits) : Bits.kZero64.slice(0, upper_bits); 
+	var upper = (val < 0) ? Bits.kOne64.slice(0, upper_bits) : Bits.kZero64.slice(0, upper_bits); 
 	return new Bits(upper + lower, Bits.kSigned);
 };
 

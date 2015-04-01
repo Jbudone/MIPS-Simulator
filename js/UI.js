@@ -131,16 +131,17 @@ define(function(){
 
 					newVal = parseInt(newVal);
 					UI.onUserModifiedRegister( $(this).data('regName'), newVal );
-					var newValBits = new Bits(newVal, Bits.kSigned);
-					regList[ regI ] = newValBits.toInt();
+					var newValBits = Bits.signed(newVal, 32);
+					regList[ $(this).data('regI') ].set( parseInt(newValBits.s, 2) ); // FIXME: check this!!
 					$(this).data('safeval', newVal);
 
 				}).data('safeval', 0)
-				.data('regName', regName);
+				.data('regName', regName)
+				.data('regI', regI);
 
 				regList[regI].hasChanged = function(){
-					var data = Bits.signed(this.val); // FIXME: check this!!
-					registers[this.name]._el.val(data.s).data('safeval', data.s);
+					var data = Bits.signed(this.val, 32).toInt(); // FIXME: check this!!
+					registers[this.name]._el.val(data).data('safeval', data);
 				};
 
 				registers[regName] = {
@@ -291,8 +292,13 @@ define(function(){
 		};
 
 		this.loadMemory = function(memoryRefI, memoryRefD){
-			this.memoryI = memoryRefI;
-			this.memoryD = memoryRefD;
+			this.memoryI = memoryRefI.cache;
+			this.memoryD = memoryRefD.cache;
+
+			memoryRefI.hasChanged = function(){
+
+			};
+
 			this.redrawMemory(parseInt('0x10010000', 16));
 		};
 

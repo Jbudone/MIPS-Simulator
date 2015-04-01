@@ -5,7 +5,8 @@ function Memory() {
 }
 
 Memory.prototype = {
-	constructor: Memory
+	constructor: Memory,
+	hasChanged: new Function()
 };
 
 function MemCache() {
@@ -43,6 +44,7 @@ MemCache.prototype = {
 		for (var i = 0; i < bytes; ++i) {
 			this.cache[index + i] = val.slice(bits - (i+1)*8, bits - i*8);
 		}
+		this.hasChanged(addr, bytes);
 	},
 
 	storeWord: function(addr, val) {
@@ -53,6 +55,7 @@ MemCache.prototype = {
 		this.cache[index + 1] = val.slice(32 - 16, 32 - 8);
 		this.cache[index + 2] = val.slice(32 - 24, 32 - 16);
 		this.cache[index + 3] = val.slice(32 - 32, 32 - 24);
+		this.hasChanged(addr, 4);
 	},
 
 	priv_at: function(idx) {
