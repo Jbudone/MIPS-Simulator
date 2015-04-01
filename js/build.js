@@ -39,7 +39,7 @@ function buildMIPS(c) {
 	c_add(c, pc_jmux, 38, 174, 'mux2');
 	c_add(c, pc_jrmux, 56, 181, 'mux2');
 	c_add(c, pc, 78, 184, 'pc');
-	c_add(c, pc_d1, 21, 194, 'dup');
+	c_add(c, pc_d1, 129, 194, 'dup');
 	
 	var pc_adder = new Adder4_32(15);
 	var pc_adder_d1 = new Dup(0);
@@ -172,7 +172,7 @@ function buildMIPS(c) {
 	c_add(c, wr_dup2, 850, 416, 'dup');
 	
 	var wrdata_mux = new Mux(20);
-	c_add(c, wr_dup1, 849, 211, 'dup');
+	c_add(c, wrdata_mux, 849, 211, 'mux2');
 
 	/* Connect the muxes infront of the PC */
 	Wire.connect32([pc_adder_d1, 1], [pc_bmux, 1]);
