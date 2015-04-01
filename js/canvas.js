@@ -69,27 +69,38 @@ define(function(){
 			ctx.strokeStyle = settings.wireColour;
 			ctx.lineWidth = settings.wireWidth;
 			for (var i=0; i<wires.length; ++i) {
-				var wire = wires[i],
-					prevPoint  = {x: canvasScale*wire.source.position.x, y:      canvasScale*wire.source.position.y},
-					lastPoint  = {x: canvasScale*wire.destination.position.x, y: canvasScale*wire.destination.position.y};
+				var wire = wires[i];
+				var prevPoint = {x:0,y:0}, lastPoint = {x:0,y:0};
+				if (!settings.wirePointsGlobal) {
+					prevPoint  = {x: canvasScale*wire.source.position.x,
+									  y:      canvasScale*wire.source.position.y},
+					lastPoint  = {x: canvasScale*wire.destination.position.x,
+									  y: canvasScale*wire.destination.position.y};
 
+					// Center the first and last points to the center of the component
+					prevPoint.x += wire.source.dimensions.width / 2;
+					prevPoint.y += wire.source.dimensions.height / 2;
+					lastPoint.x += wire.destination.dimensions.width / 2;
+					lastPoint.y += wire.destination.dimensions.height / 2;
+				}
+				else {
+					if (wire.points.length) {
+						prevPoint = {x: canvasScale*wire.points[0].x,
+										 y: canvasScale*wire.points[1].y};
+					}
+				}
 				if (wire.highlighted) {
 					ctx.strokeStyle = settings.wireHighlight;
 					ctx.lineWidth = settings.wireHighlightWidth;
 				}
-
-				// Center the first and last points to the center of the component
-				prevPoint.x += wire.source.dimensions.width / 2;
-				prevPoint.y += wire.source.dimensions.height / 2;
-				lastPoint.x += wire.destination.dimensions.width / 2;
-				lastPoint.y += wire.destination.dimensions.height / 2;
 
 				// Points are relative from the last point. So we draw the path and continuously add to the
 				// previous point
 				ctx.beginPath();
 				ctx.moveTo(prevPoint.x, prevPoint.y);
 				for (var p=0; p<wire.points.length; ++p) {
-					var nextPoint = canvasScale*wire.points[p];
+					var nextPoint = {x: canvasScale*wire.points[p].x,
+										  y: canvasScale*wire.points[p].y};
 
 					if (settings.wirePointsGlobal) {
 						ctx.lineTo(nextPoint.x, nextPoint.y);
@@ -104,24 +115,26 @@ define(function(){
 				// Fix the last point to attempt to make it align with the horizontal or vertical ruler. If
 				// the last point can be shifted to align horizontally and/or vertically such that it will
 				// stay lay underneath the component, then do that.
-				var offByX = lastPoint.x - prevPoint.x,
-					offByY = lastPoint.y - prevPoint.y;
-				
-				if (offByX != 0) {
-					if (prevPoint.x >= wire.destination.position.x &&
-						prevPoint.x <= wire.destination.position.x + wire.destination.dimensions.width) {
+				if (!settings.wirePointsGlobal) {
+					var offByX = lastPoint.x - prevPoint.x,
+						 offByY = lastPoint.y - prevPoint.y;
+					
+					if (offByX != 0) {
+						if (prevPoint.x >= wire.destination.position.x &&
+							 prevPoint.x <= wire.destination.position.x + wire.destination.dimensions.width) {
 							lastPoint.x = prevPoint.x;
 						}
-				}
+					}
 
-				if (offByY != 0) {
-					if (prevPoint.y >= wire.destination.position.y &&
-						prevPoint.y <= wire.destination.position.y + wire.destination.dimensions.height) {
+					if (offByY != 0) {
+						if (prevPoint.y >= wire.destination.position.y &&
+							 prevPoint.y <= wire.destination.position.y + wire.destination.dimensions.height) {
 							lastPoint.y = prevPoint.y;
 						}
-				}
+					}
 
-				ctx.lineTo(lastPoint.x, lastPoint.y);
+					ctx.lineTo(lastPoint.x, lastPoint.y);
+				}
 				ctx.stroke();
 
 				if (wire.highlighted) {
@@ -137,10 +150,16 @@ define(function(){
 
 				if (component.asset) {
 					if (component.asset.image) {
-						ctx.drawImage(component.asset.image, canvasScale*component.position.x, canvasScale*component.position.y, component.dimensions.width, component.dimensions.height);
+						ctx.drawImage(component.asset.image,
+										  canvasScale*component.position.x,
+										  canvasScale*component.position.y,
+										  component.dimensions.width,
+										  component.dimensions.height);
 					}
 				} else {
-					ctx.fillRect(component.position.x, component.position.y, component.dimensions.width, component.dimensions.height);
+					ctx.fillRect(component.position.x, component.position.y,
+									 component.dimensions.width,
+									 component.dimensions.height);
 				}
 			}
 		};

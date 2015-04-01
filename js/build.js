@@ -106,7 +106,7 @@ function buildMIPS(c) {
 	var ctrl = new Ctrl(30);
 	var alusrc0_d1 = new Dup(0);
 	c_add(c, ctrl, 338, 25, 'ctrl');
-	c_add(c, alusrc0_d1, 431, 103, 'dup');
+	c_add(c, alusrc0_d1, 431, 113, 'dup');
 
 	var idex = new ID_EX(10);
 	idex.ctrl.priority = 38;
@@ -126,7 +126,11 @@ function buildMIPS(c) {
 	c_add(c, r01_fwmem_d1, 524, 240, 'dup');
 	
 	var r0_mux2 = new Mux(18);
+	var r0_mux3 = new Mux(17);
+	var r0i_d1 = new Dup(0);
 	c_add(c, r0_mux2, 529, 187, 'mux3');
+	c_add(c, r0_mux3, 570, 190, 'mux2');
+	c_add(c, r0i_d1, 561, 236, 'dup');
 	
 	var r1_mux1 = new Mux(18);
 	var r1_d1 = new Dup(0);
@@ -134,7 +138,7 @@ function buildMIPS(c) {
 	c_add(c, r1_d1, 555, 230, 'dup');
 	
 	var r1_mux2 = new Mux(17);
-	c_add(c, r1_mux2, 571, 223, 'mux3');
+	c_add(c, r1_mux2, 582, 223, 'mux3');
 
 	var alu = new ALU(16);
 	c_add(c, alu, 602, 189, 'alu');
@@ -179,38 +183,38 @@ function buildMIPS(c) {
 	c_add(c, wrdata_mux, 849, 211, 'mux2');
 
 	/* Connect the muxes infront of the PC */
-	c.addWire(Wire.connect32([pc_adder_d1, 1], [pc_bmux, 1], [{x:191,y:351}, {x:191, y:376}, {x:2,y:376},{x:2,y:173},{x:22,y:175}]));
-	c.addWire(Wire.connect32([b_adder, 0], [pc_bmux, 2], [{x:628,y:341},{x:639,y:341},{x:639,y:390},{x:12,y:390},{x:11,y:187},{x:21,y:187}]));
+	c.addWire(Wire.connect32([pc_adder_d1, 1], [pc_bmux, 1], [{x:192,y:352}, {x:192, y:378}, {x:0,y:378},{x:0,y:175},{x:22,y:175}]));
+	c.addWire(Wire.connect32([b_adder, 0], [pc_bmux, 2], [{x:629,y:342},{x:641,y:342},{x:641,y:392},{x:13,y:392},{x:13,y:188},{x:23,y:188}]));
 
-	c.addWire(Wire.connect32([pc_bmux, 0], [pc_jmux, 1]));
-	c.addWire(Wire.connect32([j_splice, 0], [pc_jmux, 2]));
+	c.addWire(Wire.connect32([pc_bmux, 0], [pc_jmux, 1], [{x:31,y:182},{x:40,y:182}]));
+	c.addWire(Wire.connect32([j_splice, 0], [pc_jmux, 2], [{x:268,y:404},{x:33,y:404},{x:33,y:195},{x:40,y:195}]));
 
-	c.addWire(Wire.connect32([pc_jmux, 0], [pc_jrmux, 1]));
-	c.addWire(Wire.connect32([r0_dup, 1], [pc_jrmux, 2]));
+	c.addWire(Wire.connect32([pc_jmux, 0], [pc_jrmux, 1], [{x:48,y:189},{x:58,y:189}]));
+	c.addWire(Wire.connect32([r0_dup, 1], [pc_jrmux, 2], [{x:394,y:189},{x:394,y:431},{x:52,y:431},{x:52,y:202},{x:58,y:202}]));
 
 	/* Connect the PC */
-	c.addWire(Wire.connect32([pc_jrmux, 0], [pc, PC.In.kAddr]));
-	c.addWire(Wire.connect32([pc, 0], [pc_d1, 0]));
-	c.addWire(Wire.connect32([pc_d1, 0], [instr_mem, 0]));
-	c.addWire(Wire.connect32([pc_d1, 1], [pc_adder, 0]));
-	c.addWire(Wire.connectConst(0, [pc, PC.In.kStall], 1));
+	c.addWire(Wire.connect32([pc_jrmux, 0], [pc, PC.In.kAddr], [{x:66,y:196},{x:80,y:196}]));
+	c.addWire(Wire.connect32([pc, 0], [pc_d1, 0], [{x:113,y:196},{x:130,y:196}]));
+	c.addWire(Wire.connect32([pc_d1, 0], [instr_mem, 0], [{x:130,y:196},{x:147,y:196}]));
+	c.addWire(Wire.connect32([pc_d1, 1], [pc_adder, 0], [{x:130,y:196},{x:130,y:339}, {x:144,y:339}]));
+	c.addWire(Wire.connectConst(0, [pc, PC.In.kStall], 1, [{x:88,y:200},{x:100,y:200}]));
 	//c.addWire(Wire.connect32([hazard, ...], [pc, PC.In.kStall]));
 
 	/* Connect the PC adder */
-	c.addWire(Wire.connect32([pc_adder, 0], [pc_adder_d1, 0]));
-	c.addWire(Wire.connect32([pc_adder_d1, 0], [ifid.data, IF_ID.D.kPCPlus4]));
+	c.addWire(Wire.connect32([pc_adder, 0], [pc_adder_d1, 0], [{x:164,y:352},{x:192,y:352}]));
+	c.addWire(Wire.connect32([pc_adder_d1, 0], [ifid.data, IF_ID.D.kPCPlus4], [{x:192,y:352},{x:235,y:352}]));
 
 	/* Connect the Instruction memory */
-	c.addWire(Wire.connect32([instr_mem, 0], [ifid.data, IF_ID.D.kInstr]));
+	c.addWire(Wire.connect32([instr_mem, 0], [ifid.data, IF_ID.D.kInstr], [{x:211,y:196},{x:235,y:196}]));
 
 	/* Connect PC Plus 4 in ID stage */
-	c.addWire(Wire.connect32([ifid.data, IF_ID.D.kPCPlus4], [pc4_s1, 0]));
-	c.addWire(Wire.connect32([pc4_s1, 0], [idex.data, ID_EX.D.kPCPlus4]));
-	c.addWire(Wire.connect([pc4_s1, 1], [j_splice, 0], 4));
+	c.addWire(Wire.connect32([ifid.data, IF_ID.D.kPCPlus4], [pc4_s1, 0], [{x:254,y:352},{x:268,y:352}]));
+	c.addWire(Wire.connect32([pc4_s1, 0], [idex.data, ID_EX.D.kPCPlus4], [{x:268,y:352},{x:454,y:352}]));
+	c.addWire(Wire.connect([pc4_s1, 1], [j_splice, 0], 4, [{x:268,y:352},{x:268,y:404}]));
 
 	/* Connect the instruction bits */
-	c.addWire(Wire.connect32([ifid.data, IF_ID.D.kInstr], [ifid_s1, 0]));
-	c.addWire(Wire.connect([ifid_s1, 0], [ctrl, Ctrl.In.kOpcode], 6));
+	c.addWire(Wire.connect32([ifid.data, IF_ID.D.kInstr], [ifid_s1, 0], [{x:254,y:196},{x:272,y:196}]));
+	c.addWire(Wire.connect([ifid_s1, 0], [ctrl, Ctrl.In.kOpcode], 6, [{x:272,y:196},{x:272,y:76}]));
 	c.addWire(Wire.connect([ifid_s1, 1], [ctrl, Ctrl.In.kFunct], 6));
 	c.addWire(Wire.connect([ifid_s1, 2], [reg, Reg.In.kReadReg0], 5));
 	c.addWire(Wire.connect([ifid_s1, 3], [reg, Reg.In.kReadReg1], 5));
@@ -253,6 +257,7 @@ function buildMIPS(c) {
 	c.addWire(Wire.connect([ctrl, Ctrl.kMemCtrl], [idex.ctrl, Ctrl.kMemCtrl], 3));
 	c.addWire(Wire.connect([ctrl, Ctrl.kALUCtrl], [idex.ctrl, Ctrl.kALUCtrl], 5));
 	c.addWire(Wire.connect([ctrl, Ctrl.kALUSrc0], [alusrc0_d1, 0], 2));
+	c.addWire(Wire.connect([ctrl, Ctrl.kALUSrc0I], [idex.ctrl, Ctrl.kALUSrc0I], 1));
 	c.addWire(Wire.connect([alusrc0_d1, 0], [idex.ctrl, Ctrl.kALUSrc0], 2));
 	c.addWire(Wire.connect([alusrc0_d1, 1], [r0_mux1, 0], 2));
 	c.addWire(Wire.connect([ctrl, Ctrl.kALUSrc1], [idex.ctrl, Ctrl.kALUSrc1], 2));
@@ -274,6 +279,7 @@ function buildMIPS(c) {
 
 	c.addWire(Wire.connect([idex.ctrl, Ctrl.kBranch], [b_and, 0], 1));
 	c.addWire(Wire.connect([idex.ctrl, Ctrl.kALUCtrl], [alu, ALU.In.kALUCtrl], 5));
+	c.addWire(Wire.connect([idex.ctrl, Ctrl.kALUSrc0I], [r0_mux3, 0], 1));
 	//c.addWire(Wire.connect([idex.ctrl, Ctrl.kALUSrc0], [hazard, ...], 2));
 	//c.addWire(Wire.connect([idex.ctrl, Ctrl.kALUSrc1], [hazard, ...], 2));
 	c.addWire(Wire.connect([idex.ctrl, Ctrl.kRegDest], [rw_mux, 0], 2));
@@ -282,14 +288,17 @@ function buildMIPS(c) {
 	c.addWire(Wire.connect32([idex.data, ID_EX.D.kReg0], [r0_mux2, 1]));
 	c.addWire(Wire.connect32([r01_fwwb_d2, 0], [r0_mux2, 2]));
 	c.addWire(Wire.connect32([r01_fwmem_d1, 0], [r0_mux2, 3]));
-	c.addWire(Wire.connect32([r0_mux2, 0], [alu, ALU.In.kIn0]));
+	c.addWire(Wire.connect32([r0i_d1, 0], [r0_mux3, 2]));
+	c.addWire(Wire.connect32([r0_mux2, 0], [r0_mux3, 1]));
+	c.addWire(Wire.connect32([r0_mux3, 0], [alu, ALU.In.kIn0]));
 	
 	c.addWire(Wire.connect32([idex.data, ID_EX.D.kReg1], [r1_mux1, 1]));
 	c.addWire(Wire.connect32([r01_fwwb_d2, 1], [r1_mux1, 2]));
 	c.addWire(Wire.connect32([r01_fwmem_d1, 1], [r1_mux1, 3]));
 	c.addWire(Wire.connect32([r1_mux1, 0], [r1_d1, 0]));
 	c.addWire(Wire.connect32([r1_d1, 0], [r1_mux2, 1]));
-	c.addWire(Wire.connect32([imm_d1, 1], [r1_mux2, 2]));
+	c.addWire(Wire.connect32([imm_d1, 1], [r0i_d1, 0]));
+	c.addWire(Wire.connect32([r0i_d1, 1], [r1_mux2, 2]));
 	c.addWire(Wire.connect32([pc4_d1, 1], [r1_mux2, 3]));
 	c.addWire(Wire.connect32([r1_mux2, 0], [alu, ALU.In.kIn1]));
 

@@ -472,11 +472,12 @@ Ctrl.kMemCtrl = 3;
 Ctrl.kBranch = 4;
 Ctrl.kALUCtrl = 5;
 Ctrl.kALUSrc0 = 6;
-Ctrl.kALUSrc1 = 7;
-Ctrl.kRegDest = 8;
-Ctrl.kJump = 9;
-Ctrl.kJumpR = 10;
-Ctrl.kExtendCtrl = 11;
+Ctrl.kALUSrc0I = 7;
+Ctrl.kALUSrc1 = 8;
+Ctrl.kRegDest = 9;
+Ctrl.kJump = 10;
+Ctrl.kJumpR = 11;
+Ctrl.kExtendCtrl = 12;
 
 Ctrl.In = {kOpcode: 0, kFunct: 1};
 
@@ -489,6 +490,7 @@ Ctrl.prototype.resetSignals = function() {
 	this.outStore[Ctrl.kMemCtrl].s = '000';
 	this.outStore[Ctrl.kALUCtrl].s = '00000';
 	this.outStore[Ctrl.kALUSrc0].s = '00';
+	this.outStore[Ctrl.kALUSrc0I].s = '0';
 	this.outStore[Ctrl.kALUSrc1].s = '00';
 	this.outStore[Ctrl.kRegDest].s = '00';
 	this.outStore[Ctrl.kBranch].s = '0';
@@ -530,6 +532,7 @@ Ctrl.prototype.processRType = function(funct) {
 		this.outStore[Ctrl.kALUCtrl].s = '011' + funct.slice(4);
 		if (funct[3] == '0') { /* immediate (use shift amt) */
 			this.outStore[Ctrl.kExtendCtrl].s = '1';
+			this.outStore[Ctrl.kALUSrc0I].s = '1';
 		}
 	}
 	
