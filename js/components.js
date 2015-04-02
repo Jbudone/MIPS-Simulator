@@ -269,31 +269,40 @@ ALU.prototype.constructor = ALU;
 ALU.prototype.execute = function() {
 	var ctrl = this.inStore[ALU.In.kALUCtrl].s;
 	var neg = parseInt(ctrl[0], 2);
-	ctrl = '0' + ctrl.slice(1);
-	
-	this.inStore[ALU.In.kIn0].type = Bits.kSigned;
-	this.inStore[ALU.In.kIn1].type = Bits.kSigned;
-	if ((ctrl != ALU.Op.kSlt && ctrl[1] == '1' && (ctrl[4] == '1' || ctrl[2] == '1')) ||
-		 (ctrl.slice(0, 3) == '001')) {
-		this.inStore[ALU.In.kIn0].type = Bits.kUnsigned;
-		this.inStore[ALU.In.kIn1].type = Bits.kUnsigned;
-	}
-	
-	var in0 = this.inStore[ALU.In.kIn0].toInt();
-	var in1 = this.inStore[ALU.In.kIn1].toInt();
+	 ctrl = '0' + ctrl.slice(1);
+	 var i_res = 0;
 
-	var i_res = 0;
-	if (ctrl != ALU.Op.kSlt && ctrl.slice(0,3) == '011') { /* shifts */
-		in1 = this.inStore[ALU.In.kIn1];
-		var res_s = ALU.fn[ctrl](in0, in1);
-		i_res = res_s.toInt();
-		res_s.setLen(64);
-		this.outStore[ALU.Out.kResult] = res_s;
-	}
-	else {
-		i_res = ALU.fn[ctrl](in0, in1);
-		this.outStore[ALU.Out.kResult] = Bits.signed(i_res, 64);
-	}
+	 /* Handle shifts */
+	 if (ctrl != ALU.Op.kSlt && ctrl.slice(0,3) == '011') {
+		  var in0 = this.inStore[ALU.In.kIn0].unsigned();
+		  var in1 = this.inStore[ALU.In.kIn1];
+		  var res_s = ALU.fn[ctrl](in0, in1);
+		  i_res = res_s.toInt();
+		  this.outStore[ALU.Out.kResult] = res_s;
+	 }
+	 /* Handle multiplies and divs */
+	 else if (ctrl != ALU.Op.kSlt && ctrl[1] == '1') {
+		  var in0 = 0;
+		  var in1 = 0;
+		  if (ctrl[4] == '1') { /* unsigned */
+				in0 = this.inStore[ALU.In.kIn0].unsigned();
+				in1 = this.inStore[ALU.In.kIn1].unsigned();
+		  }
+		  else {
+				in0 = this.inStore[ALU.In.kIn0].signed();
+				in1 = this.inStore[ALU.In.kIn1].signed();
+		  }
+		  i_res = ALU.fn[ctrl](in0, in1);
+		  this.outStore[ALU.Out.kResult] = Bits.unsigned(i_res, 64);
+	 }
+	 else {
+		  var in0 = this.inStore[ALU.In.kIn0].signed();
+		  var in1 = this.inStore[ALU.In.kIn1].signed();
+		  i_res = ALU.fn[ctrl](in0, in1);
+		  this.outStore[ALU.Out.kResult] = Bits.signed(i_res, 32);
+	 }
+	 this.outStore[ALU.Out.kResult].setLen(64);
+
 	/* Set zero bit */
 	if (neg) { this.outStore[ALU.Out.kZero] = Bits.bit(i_res != 0); }
 	else { this.outStore[ALU.Out.kZero] = Bits.bit(i_res == 0); }
@@ -361,9 +370,9 @@ Ext32.prototype.execute = function() {
 	}
 	else { /* Sign extending the immediate value */
 		lower = this.inStore[Ext32.In.kInput].s;
-		upper = (this.inStore[0][0] == '1') ? Bits.kOne64.slice(0, 16) : Bits.kZero64.slice(0, 16);
+		 upper = (lower[0] == '1') ? Bits.kOne64.slice(0, 16) : Bits.kZero64.slice(0, 16);
 	}
-	this.outStore[0] = Bits.splice(upper, this.inStore[0]);
+	this.outStore[0] = Bits.splice(upper, lower);
 };
 
 // ######################################
@@ -515,7 +524,6 @@ Ctrl.prototype.processRType = function(funct) {
 	else if (funct[1] == '1') { /* Mult, div or move from hi/low */
 		if (funct[2] == '1') { /* Mult or Div */
 			this.outStore[Ctrl.kRegWrite].s = '10';
-			this.outStore[Ctrl.kRegDest].s = '11';
 			this.outStore[Ctrl.kALUCtrl].s = '0' + funct.slice(2);
 		}
 		else { /* Move from hi or low */
@@ -563,7 +571,7 @@ Ctrl.prototype.execute = function() {
 			this.outStore[Ctrl.kALUSrc0].s = ALU.Src0.kR0;
 		}
 		else if (opcode[3] == '1') { /* andi, ori */
-			if (opcode[5] == '0') { /* ori */
+			if (opcode[5] == '1') { /* ori */
 				this.outStore[Ctrl.kALUCtrl].s = ALU.Op.kOr;
 			}
 			else { /* andi */

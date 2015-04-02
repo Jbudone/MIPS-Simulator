@@ -89,6 +89,15 @@ Bits.prototype = {
 		}
 	},
 
+	 unsigned: function() {
+		  return parseInt(this.s, 2);
+	 },
+
+	 signed: function() {
+		  var signed = this.s[0] + Bits.kZero64.slice(0, this.s.length-1);
+		  return (-parseInt(signed, 2)) + parseInt(this.s.slice(1), 2);
+	 },
+
 	/* Make the bit string a certain number of bits by either padding
 	 * with zeros on the left or slicing off part of the left
 	 */
