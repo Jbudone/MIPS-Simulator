@@ -10,6 +10,8 @@ define(['UI', 'canvas'], function(UI, Canvas){
 	//  visual assets into canvas + wires
 	//  adjust wires/points & positions to be relative & responsive
 	//  
+	//  code snippets (load source + binary); should be commented so he knows what to look for; exit after a
+	//  set number of steps; stop after choosing a new code snippet
 
 	Keys.add(['STAGE_IF', 'STAGE_ID', 'STAGE_EX', 'STAGE_MEM', 'STAGE_WB']); // Instruction Pipeline/stages
 
