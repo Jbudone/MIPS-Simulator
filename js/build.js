@@ -106,7 +106,7 @@ function buildMIPS(c) {
 	var ctrl = new Ctrl(30);
 	var alusrc0_d1 = new Dup(0);
 	c_add(c, ctrl, 338, 24, 'ctrl');
-	c_add(c, alusrc0_d1, 430, 120, 'dup');
+	c_add(c, alusrc0_d1, 412, 120, 'dup');
 
 	var idex = new ID_EX(10);
 	idex.ctrl.priority = 38;
@@ -262,7 +262,7 @@ function buildMIPS(c) {
 	 c.addWire(Wire.connect([ctrl, Ctrl.kRegDest], [idex.ctrl, Ctrl.kRegDest], 2, [{x:407,y:112},{x:454,y:112}]));
 	 c.addWire(Wire.connect([ctrl, Ctrl.kALUSrc0], [alusrc0_d1, 0], 2, [{x:407,y:122},{x:432,y:122}]));
 	 c.addWire(Wire.connect([alusrc0_d1, 0], [idex.ctrl, Ctrl.kALUSrc0], 2, [{x:432,y:122},{x:454,y:122}]));
-	 c.addWire(Wire.connect([alusrc0_d1, 1], [r0_mux1, 0], 2, [{x:432,y:122},{x:432,y:194}]));
+	 c.addWire(Wire.connect([alusrc0_d1, 1], [r0_mux1, 0], 2, [{x:414,y:122},{x:414,y:194}]));
 
 	 c.addWire(Wire.connect([ctrl, Ctrl.kJump], [pc_jmux, 0], 1, [{x:339,y:47},{x:45,y:47},{x:45,y:181}]));
 	 c.addWire(Wire.connect([ctrl, Ctrl.kJumpR], [pc_jrmux, 0], 1, [{x:343,y:60},{x:63,y:62},{x:63,y:184}]));

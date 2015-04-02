@@ -263,7 +263,7 @@ ALU.fn[ALU.Op.kSrl] = function(a,b) { return b.shiftRight(a); };
 ALU.fn[ALU.Op.kSra] = function(a,b) { return b.shiftRightArithmetic(a); };
 
 ALU.Src0 = { kRs: '00', kR0: '01', kLo: '10', kHi: '11' };
-ALU.Src1 = { kRt: '00', kR0: '01', kImmediate: '10', kPCPlus4: '11' }; 
+ALU.Src1 = { kRt: '00', kImmediate: '01', kPCPlus4: '10' }; 
 
 ALU.prototype.constructor = ALU;
 ALU.prototype.execute = function() {

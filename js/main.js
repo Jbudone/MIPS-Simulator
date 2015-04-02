@@ -106,7 +106,7 @@ define(['UI', 'canvas'], function(UI, Canvas){
 												00000011111000000000000000001000 \
 											");
 		},
-	}['lui'];
+	}['addi'];
 
 	
 
