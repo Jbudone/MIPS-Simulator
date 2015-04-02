@@ -80,8 +80,8 @@ function buildMIPS(c) {
 
 	var rs_hz_d1 = new Dup(0);
 	var rt_hz_d1 = new Dup(0);
-	c_add(c, rs_hz_d1, 431, 299, 'dup');
-	c_add(c, rt_hz_d1, 441, 292, 'dup');
+	c_add(c, rs_hz_d1, 431, 292, 'dup');
+	c_add(c, rt_hz_d1, 441, 299, 'dup');
 
 	var ext = new Ext32(17);
 	c_add(c, ext, 337, 324, 'extend');
@@ -222,7 +222,7 @@ function buildMIPS(c) {
 	c.addWire(Wire.connect([ifid_s1, 5], [rt_hz_d1, 0], 5, [{x:272,y:196},{x:272,y:300},{x:442,y:300}]));
 	c.addWire(Wire.connect([ifid_s1, 6], [idex.data, ID_EX.D.kRd], 5, [{x:272,y:196},{x:272,y:307},{x:454,y:307}]));
 	c.addWire(Wire.connect([ifid_s1, 7], [ext, 0], 16, [{x:272,y:196},{x:272,y:332},{x:338,y:332}]));
-	c.addWire(Wire.connect([ifid_s1, 8], [j_shift, 0], 26));
+	c.addWire(Wire.connect([ifid_s1, 8], [j_shift, 0], 26, [{x:272,y:196},{x:272,y:332},{x:319,y:332},{x:319,y:404},{x:309,y:404}]));
 
 	/* Connect the jump shift */
 	c.addWire(Wire.connect([j_shift, 0], [j_splice, 1], 28));
