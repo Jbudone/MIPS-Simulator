@@ -76,7 +76,7 @@ define(function(){
 				instructions = [];
 
 			// trim out the non-code
-			text = text.trim().split('\n');
+			text = text.trim().split(/\s+/);
 			for (var i=0; i<text.length; ++i) {
 				var line = text[i].trim();
 				if (/^[01]+$/.test(line) && line.length == 32) {
