@@ -107,6 +107,10 @@ body {
 	background: #F0F0F0;
 }
 
+#snippets {
+	height: 100%;
+}
+
 #code {
 	height: 100%;
 }
@@ -239,4 +243,8 @@ body {
 #output .message {
 	float: left;
 	clear: both;
+}
+
+.snippet-link {
+	cursor: pointer;
 }

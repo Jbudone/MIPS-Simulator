@@ -74,8 +74,8 @@
 			</div>
 			<canvas id="processor"></canvas>
 			<div id="controls">
-				<a id="control-resume" class="data-button flipped" href="#"><img src="styles/player_start.png" /></a>
-				<a id="control-step" class="data-button" href="#"><img src="styles/forward.png" /></a>
+				<a data-toggle="tooltip" data-placement="top" title="Run through the process (automated)" id="control-resume" class="data-button flipped" href="#"><img src="styles/player_start.png" /></a>
+				<a data-toggle="tooltip" data-placement="top" title="Step through the process" id="control-step" class="data-button" href="#"><img src="styles/forward.png" /></a>
 			</div>
 		</div>
 		<div id="processor-data">
@@ -105,14 +105,20 @@
 
 				<!-- Nav tabs -->
 				<ul id="tabs" class="nav nav-tabs" role="tablist">
-					<li role="presentation" class="active"><a href="#editor-container" aria-controls="editor-container" role="tab" data-toggle="tab">Editor</a></li>
+					<li role="presentation" class="active"><a href="#snippets-container" aria-controls="snippets-container" role="tab" data-toggle="tab">Snippets</a></li>
+					<li role="presentation"><a href="#editor-container" aria-controls="editor-container" role="tab" data-toggle="tab">Editor</a></li>
 					<li role="presentation"><a href="#code-container" aria-controls="code-container" role="tab" data-toggle="tab">Code</a></li>
 					<li role="presentation"><a href="#output-container" aria-controls="output-container" role="tab" data-toggle="tab">Output</a></li>
 				</ul>
 
 				<!-- Tab panes -->
 				<div class="tab-content">
-					<div role="tabpanel" class="tab-pane active" id="editor-container">
+					<div role="tabpanel" class="tab-pane active" id="snippets-container">
+						<pre id="snippets">
+
+						</pre>
+					</div>
+					<div role="tabpanel" class="tab-pane" id="editor-container">
 						<pre id="editor">
 
 ####################################################################

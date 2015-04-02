@@ -39,6 +39,8 @@ function buildMIPS(c) {
 	var pc = new PC(10);
 	var pc_d1 = new Dup(0);
 
+	window['pc'] = pc;
+
 	c_add(c, pc_bmux, 20, 166, 'mux2');
 	c_add(c, pc_jmux, 38, 173, 'mux2');
 	c_add(c, pc_jrmux, 56, 180, 'mux2');
@@ -57,6 +59,9 @@ function buildMIPS(c) {
 	var ifid = new IF_ID(10);
 	ifid.ctrl.priority = 37;
 	ifid.data.priority = 22;
+
+	window['ifid'] = ifid;
+
 	var ifid_s1 = new Splitter(0, [
 		[31, 26],  /* opcode for control unit */
 		[5, 0],    /* funct for ALU control */
@@ -113,6 +118,8 @@ function buildMIPS(c) {
 	idex.data.priority = 23;
 	c_add(c, idex, 453, 19, 'idex');
 
+	window['idex'] = idex;
+
 	var rt_d = new Dup(0);
 	var rw_mux = new Mux(18);
 	c_add(c, rt_d, 490, 298, 'dup');
@@ -160,6 +167,8 @@ function buildMIPS(c) {
 	exmem.data.priority = 24;
 	c_add(c, exmem, 666, 19, 'exmem');
 
+	window['exmem'] = exmem;
+
 	var aout_s1 = new Splitter(0, [[31, 0], [63, 0]]);
 	var aout_s2 = new Splitter(0, [[31, 0], [63, 0]]);
 	c_add(c, aout_s1, 701, 217, 'split');
@@ -175,6 +184,8 @@ function buildMIPS(c) {
 	memwb.ctrl.priority = 40;
 	memwb.data.priority = 25;
 	c_add(c, memwb, 807, 19, 'memwb');
+
+	window['memwb'] = memwb;
 
 	var wr_dup2 = new Dup(0);
 	c_add(c, wr_dup2, 840, 416, 'dup');

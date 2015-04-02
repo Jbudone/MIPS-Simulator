@@ -71,6 +71,7 @@ define(function(){
 
 
 		this.aceCode = code;
+		this.aceMIPS = editor;
 		this.getCode = function(){
 			var text = code.getValue(),
 				instructions = [];

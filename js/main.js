@@ -15,123 +15,232 @@ define(['UI', 'canvas'], function(UI, Canvas){
 
 	Keys.add(['STAGE_IF', 'STAGE_ID', 'STAGE_EX', 'STAGE_MEM', 'STAGE_WB']); // Instruction Pipeline/stages
 
-	// Basic testing snippets source:
-	// http://sites.fas.harvard.edu/~cscie287/fall2014/MIPS%20Coding%20Snippets.pdf
-	var TESTING_MODE = {
-		'none': null,
-		'add': function(){
-			MIPS.registers[2].set(4);
-			MIPS.registers[1].set(12);
-			UI.aceCode.getSession().setValue("00000000001000100001100000100000");
-		}, 'addi': function(){
 
-			// FIXME: $a1 = 4 but should = 17
+	var nextRun = null;
+	var reset = function(){
 
-			// addi $a1, $a0, 13
-			MIPS.registers[MIPS.reg_names.indexOf('$a0')].set(4);
-			UI.aceCode.getSession().setValue(" 00100000100001010000000000001101 ");
-		}, 'addi_neg': function(){
-			// FIXME: $a1 = 4 but should = -9
+		if (nextRun) clearTimeout(nextRun);
+		for (var i=0; i<MIPS.memory.icache.cache.length; ++i) {
+			if (MIPS.memory.icache.cache[i]) {
+				MIPS.memory.icache.cache[i] = 0;
+			}
+		}
+		for (var i=0; i<MIPS.memory.dcache.cache.length; ++i) {
+			if (MIPS.memory.dcache.cache[i]) {
+				MIPS.memory.dcache.cache[i] = 0;
+			}
+		}
+		for (var i=0; i<MIPS.reg_names.length; ++i) {
+			MIPS.registers[i].set(0);
+		}
+		MIPS.registers['HI'].set(0);
+		MIPS.registers['LO'].set(0);
 
-			// addi $a1, $a0, -13
-			MIPS.registers[MIPS.reg_names.indexOf('$a0')].set(4);
-			UI.aceCode.getSession().setValue(" 00100000100001011111111111110011 ");
-		}, 'and': function(){
+		MIPS.queue.queue = new Array();
+		MIPS.queue.insert( pc );
+		MIPS.queue.insert( ifid );
+		MIPS.queue.insert( idex );
+		MIPS.queue.insert( exmem );
+		MIPS.queue.insert( memwb );
 
-			// and $s3,$s1,$s2
-			MIPS.registers[MIPS.reg_names.indexOf('$s1')].set(3);
-			MIPS.registers[MIPS.reg_names.indexOf('$s2')].set(5);
-			UI.aceCode.getSession().setValue(" 00000010001100101001100000100100 ");
-		}, 'andi': function(){
+		for (var i=0; i<pc.inputs.length; ++i) {
+			pc.inputs[i].setValue(0, pc.inputs[i].bits);
+		}
+	};
 
-			// andi $s2,$s1,5
-			MIPS.registers[MIPS.reg_names.indexOf('$s1')].set(4);
-			UI.aceCode.getSession().setValue(" 00110010001100100000000000000101 ");
-		}, 'or': function(){
+	// Snippets of code
+	var preRun = null;
+	var addSnippet = function(snippet){
 
-			// or $s3,$s1,$s2
-			MIPS.registers[MIPS.reg_names.indexOf('$s1')].set(1);
-			MIPS.registers[MIPS.reg_names.indexOf('$s2')].set(4);
-			UI.aceCode.getSession().setValue(" 00000010001100101001100000100101 ");
-		}, 'mult128': function(){
-			// FIXME: supposed to set $t1 = $t0 * 128  ... instead does $t1 = $t0 * 1
-			// sll $t1, $t0, 7
-			MIPS.registers[MIPS.reg_names.indexOf('$t0')].set(4);
-			UI.aceCode.getSession().setValue("00000000000010000100100111000000");
-		}, 'mult': function(){
-			// FIXME: supposed to set $t1 = $t0 * 4  ... instead does $t1 = $t0 * 1
-			// sll $t1, $t0, 2
-			MIPS.registers[MIPS.reg_names.indexOf('$t0')].set(4);
-			UI.aceCode.getSession().setValue("00000000000010000100100010000000");
-		}, 'sw': function(){
-			// FIXME: sets dcache[$s1] = $s1 ... should be dcache[0] = $s1
-			// sw $s1, 0($zero)
-			MIPS.registers[MIPS.reg_names.indexOf('$s1')].set(42);
-			UI.aceCode.getSession().setValue(" 10101100000100010000000000000000 ");
-		}, 'lui': function(){
-			// FIXME: sets $s1 = 1, should be 2^16
-			// lui $s1,1
-			//MIPS.registers[MIPS.reg_names.indexOf('$s1')].set(1);
-			UI.aceCode.getSession().setValue(" 00111100000100010000000000010000 ");
-		}, 'exponent': function(){
+		var _snippetLink = $('<a/>').addClass('snippet-link').text(snippet.name).click(function(){
 
-			// FIXME: running this triggers component.js:31 exception (value undefined)
+			// reset();
 
-			// Subroutine: exp
-			// Description: computes $a0 raised to the $a1 power by simple looping
-			// Parameters: $a0 is the base
-			// $a1 is the exponent
-			// Results: $v0 will be $a0 ^ $a1
-			// Side effects: $a1, HI, LO, and $ra will be overwritten
+			var snippet = $(this).data('snippet');
+			UI.aceMIPS.getSession().setValue( snippet.mips );
+			UI.aceCode.getSession().setValue( snippet.code );
+			
+			if (snippet.preRun) snippet.preRun();
+			preRun = snippet.preRun;
+			$('#tabs [aria-controls="editor-container"]').tab('show');
 
-			/*
-			 exp:
-			 		$v0, $0, 1 # initial result is 1
-			 		beq $a1, $0, expZero # loop is over, exponent is now zero
-			 expLoop:
-			 		mult $v0, $a0 # (HI concat LO) <- running product * base
-			 		mflo $v0 # update the running product
-			 		addi $a1, $a1, -1 # decrement the exponent
-			 		bne $a1, $0, expLoop
-			 expZero:
-			 		jr $ra
-			*/
+			return false;
+		}).data('snippet', snippet);
+		var _snippetDesc = $('<span/>').addClass('snippet-desc').text(snippet.description);
+		var _snippetEl = $('<div/>').addClass('snippet-container').append( _snippetDesc ).append( _snippetLink );
 
-			MIPS.registers[MIPS.reg_names.indexOf('$a0')].set(2);
-			MIPS.registers[MIPS.reg_names.indexOf('$a1')].set(3);
-			UI.aceCode.getSession().setValue("00110100000000100000000000000001 \
-00000000000000000000000000000000 \
-00000000000000000000000000000000 \
-												00010000101000000000000000000100 \
-00000000000000000000000000000000 \
-00000000000000000000000000000000 \
-												00000000010001000000000000011000 \
-00000000000000000000000000000000 \
-00000000000000000000000000000000 \
-												00000000000000000001000000010010 \
-00000000000000000000000000000000 \
-00000000000000000000000000000000 \
-												00100000101001011111111111111111 \
-00000000000000000000000000000000 \
-00000000000000000000000000000000 \
-												00010100101000001111111111111100 \
-00000000000000000000000000000000 \
-00000000000000000000000000000000 \
-												00000011111000000000000000001000 \
-00000000000000000000000000000000 \
-00000000000000000000000000000000 \
-											");
-		},
-	}['exponent'];
+		$('#snippets').append( _snippetEl );
+
+	};
 
 	
+	// Basic testing snippets source:
+	// http://sites.fas.harvard.edu/~cscie287/fall2014/MIPS%20Coding%20Snippets.pdf
+	addSnippet({
+		name: "Add",
+		description: "Add two registers: ",
+		mips: "addi $at, $zero, 12 \naddi $v0, $zero, 4 \nadd $v1, $at, $v0",
+		code: "00000000001000100001100000100000",
+		preRun: function(){
+			MIPS.registers[2].set(4);
+			MIPS.registers[1].set(12);
+		}
+	});
 
+	addSnippet({
+		name: "Add Immediate",
+		description: "Add immediate value to register: ",
+		mips: "addi $a0, $zero, 4 \naddi $a1, $a0, 13",
+		code: "00100000100001010000000000001101",
+		preRun: function(){
+			MIPS.registers[MIPS.reg_names.indexOf('$a0')].set(4);
+		}
+	});
+
+	addSnippet({
+		name: "Add Immediate (negative)",
+		description: "Add immediate negative value to register: ",
+		mips: "addi $a0, $zero, 4\naddi $a1, $a0, -13",
+		code: "00100000100001011111111111110011",
+		preRun: function(){
+			MIPS.registers[MIPS.reg_names.indexOf('$a0')].set(4);
+		}
+	});
+
+	addSnippet({
+		name: "And",
+		description: "And two registers: ",
+		mips: "addi $s1, $zero, 3\naddi $s2, $zero, 5\nand $s3, $s1, $s2",
+		code: "00000010001100101001100000100100",
+		preRun: function(){
+			MIPS.registers[MIPS.reg_names.indexOf('$s1')].set(3);
+			MIPS.registers[MIPS.reg_names.indexOf('$s2')].set(5);
+		}
+	});
+
+	addSnippet({
+		name: "And Immediate",
+		description: "And an immediate value: ",
+		mips: "addi $s1, $zero, 4\nandi $s2, $s1, 5",
+		code: "00110010001100100000000000000101",
+		preRun: function(){
+			MIPS.registers[MIPS.reg_names.indexOf('$s1')].set(4);
+		}
+	});
+
+	addSnippet({
+		name: "Or",
+		description: "Or two registers: ",
+		mips: "addi $s1, $zero, 1\naddi $s2, $zero, 4\nor $s3, $s1, $s2",
+		code: "00000010001100101001100000100101",
+		preRun: function(){
+			MIPS.registers[MIPS.reg_names.indexOf('$s1')].set(1);
+			MIPS.registers[MIPS.reg_names.indexOf('$s2')].set(4);
+		}
+	});
+
+	addSnippet({
+		name: "Multiply 128",
+		description: "Multiply a register: ",
+		mips: "addi $t0, $zero, 4\nsll $t1, $t0, 7",
+		code: "00000000000010000100100111000000",
+		preRun: function(){
+			MIPS.registers[MIPS.reg_names.indexOf('$t0')].set(4);
+		}
+	});
+
+	addSnippet({
+		name: "Multiply 4",
+		description: "Multiply a register: ",
+		mips: "addi $t0, $zero, 4\nsll $t1, $t0, 2",
+		code: "00000000000010000100100010000000",
+		preRun: function(){
+			MIPS.registers[MIPS.reg_names.indexOf('$t0')].set(4);
+		}
+	});
+
+	addSnippet({
+		name: "Store Word",
+		description: "Store a word into memory: ",
+		mips: "addi $s1, $zero, 42\nsw $s1, 0($zero)",
+		code: "10101100000100010000000000000000",
+		preRun: function(){
+			MIPS.registers[MIPS.reg_names.indexOf('$s1')].set(42);
+		}
+	});
+
+	addSnippet({
+		name: "Set Short",
+		description: "Set $s1 = 2^16: ",
+		mips: "addi $s1, $zero, 1\nlui $s1, 1",
+		code: "00111100000100010000000000010000",
+		preRun: function(){
+			MIPS.registers[MIPS.reg_names.indexOf('$s1')].set(1);
+		}
+	});
+
+	/*
+	addSnippet({
+		name: "Exponent",
+		description: "Take the exponent of a number: ",
+		mips: "\
+\n# Subroutine: exp\
+\n# Description: computes $a0 raised to the $a1 power by simple looping\
+\n# Parameters: $a0 is the base\
+\n# $a1 is the exponent\
+\n# Results: $v0 will be $a0 ^ $a1\
+\n# Side effects: $a1, HI, LO, and $ra will be overwritten\
+\n\
+\naddi $a0, $zero, 2\
+\naddi $a1, $zero, 3\
+\n		 exp:\
+\n		 		add $v0, $zero, 1 # initial result is 1\
+\n		 		beq $a1, $zero, expZero # loop is over, exponent is now zero\
+\n		 expLoop:\
+\n		 		mult $v0, $a0 # (HI concat LO) <- running product * base\
+\n		 		mflo $v0 # update the running product\
+\n		 		addi $a1, $a1, -1 # decrement the exponent\
+\n		 		bne $a1, $0, expLoop\
+\n		 expZero:",
+		code: "\
+\n00100000000001000000000000000010\
+\n00100000000001010000000000000011\
+\n00100000000000100000000000000001\
+\n00000000000000000000000000000000\
+\n00000000000000000000000000000000\
+\n00000000000000000000000000000000\
+\n00000000000000000000000000000000\
+\n00000000000000000000000000000000\
+\n00010000101000000000000000001100\
+\n00000000010001000000000000011000\
+\n00000000000000000000000000000000\
+\n00000000000000000000000000000000\
+\n00000000000000000000000000000000\
+\n00000000000000000000000000000000\
+\n00000000000000000001000000010010\
+\n00100000101001011111111111111111\
+\n00000000000000000000000000000000\
+\n00000000000000000000000000000000\
+\n00000000000000000000000000000000\
+\n00000000000000000000000000000000\
+\n00010100101000001111111111110100",
+		preRun: function(){
+			MIPS.registers[MIPS.reg_names.indexOf('$a0')].set(2);
+			MIPS.registers[MIPS.reg_names.indexOf('$a1')].set(3);
+		}
+	});
+	*/
 
 	$('#control-resume').click(function(){
 
-		if (TESTING_MODE) {
-			TESTING_MODE();
+		if (nextRun || hasInitialized) {
+			// Omg! We're already running
+			alert("Oops! It looks like you already have a process running.. try refreshing the page to running from scratch");
+			return false;
+			// reset();
 		}
+
+		if (preRun) preRun();
 
 		var code = UI.getCode(),
 			address = 0;
@@ -147,7 +256,7 @@ define(['UI', 'canvas'], function(UI, Canvas){
 			// try {
 				MIPS.execStage();
 				console.log("Stepping code..");
-				setTimeout( stepCode, 500 );
+				nextRun = setTimeout( stepCode, 500 );
 			// } catch(e) {
 			// 	console.error(e);
 			// 	debugger;
@@ -161,6 +270,13 @@ define(['UI', 'canvas'], function(UI, Canvas){
 
 	var hasInitialized = false;
 	$('#control-step').click(function(){
+
+		if (nextRun) {
+			// Omg! We're already running
+			alert("Oops! It looks like you already have a process running.. try refreshing the page to running from scratch");
+			return false;
+			// reset();
+		}
 
 		if (!hasInitialized) {
 			var code = UI.getCode();
