@@ -195,8 +195,9 @@ define(function(){
 					dimensions.height !== ctx.canvas.height) {
 
 					ctx.canvas.width = dimensions.width;
-					ctx.canvas.height = dimensions.height;
-					canvasScale = (dimensions.width / dimensions.height) / (900 / 500);
+					 ctx.canvas.height = dimensions.height;
+					 /* Canvas scale messes up sizing because of numerical errors. */
+					 canvasScale = 1;//(dimensions.width / dimensions.height) / (900 / 500);
 					hasUpdated = true;
 				}
 			};
